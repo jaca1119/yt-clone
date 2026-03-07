@@ -25,8 +25,6 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [count, setCount] = useState(0);
-
   return (
     <html lang="en">
       <head>
@@ -37,11 +35,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <div>
-          <button onClick={() => setCount((count) => count + 1)}>
-            Count is {count}
-          </button>
-        </div>
         <ScrollRestoration />
         <Scripts />
       </body>
