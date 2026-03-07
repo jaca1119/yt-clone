@@ -19,3 +19,7 @@ Features:
 - [ ] kibana 
 - [ ] grafana
 - [ ] microservices, separate them, kubernetes?
+
+Use cases:
+- [ ] As an unauthenticated user I want to open homepage, see videos thumbnails, length title, author
+- [ ] As an unauthenticated user I want to click on the video on watch it
