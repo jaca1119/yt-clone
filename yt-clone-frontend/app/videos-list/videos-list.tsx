@@ -1,13 +1,14 @@
+import { Link } from "react-router";
 import type { Video } from "~/routes/home";
 
-export function Welcome({ videos }: { videos: Video[] }) {
+export function VideosList({ videos }: { videos: Video[] }) {
   return (
     <main className="flex items-center justify-center pt-16 pb-4">
       <div className="flex-1 flex flex-col items-center gap-16 min-h-0">
         <div className="font-bold text-2xl">YT-clone</div>
         <div className="flex flex-wrap gap-3 ml-5">
           {videos.map(({ id, title, length, thumbnail }) => (
-            <a href="#" key={id}>
+            <Link to={"/video/" + id} key={id}>
               <div className="relative">
                 <img
                   className="w-75"
@@ -27,7 +28,7 @@ export function Welcome({ videos }: { videos: Video[] }) {
                 </span>
               </div>
               <div>{title}</div>
-            </a>
+            </Link>
           ))}
         </div>
       </div>

@@ -1,5 +1,5 @@
 import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
+import { VideosList } from "../videos-list/videos-list";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -25,5 +25,5 @@ export function HydrateFallback() {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  return <Welcome videos={loaderData} />;
+  return <VideosList videos={loaderData} />;
 }
