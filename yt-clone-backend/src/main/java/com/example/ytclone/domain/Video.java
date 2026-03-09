@@ -11,7 +11,7 @@ import java.util.UUID;
 public class Video {
     private UUID id;
     private Path video;
-    private Path thumbnail;
+    private String thumbnail;
     private String title;
     private int length;
 }
