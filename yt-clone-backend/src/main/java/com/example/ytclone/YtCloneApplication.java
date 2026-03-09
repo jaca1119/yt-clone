@@ -1,13 +1,57 @@
 package com.example.ytclone;
 
+import com.example.ytclone.domain.Video;
+import com.example.ytclone.infrastructure.persistence.VideoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Stream;
 
 @SpringBootApplication
-public class YtCloneApplication {
+public class YtCloneApplication implements CommandLineRunner {
+    @Autowired
+    VideoRepository videoRepository;
+    @Autowired
+    ObjectMapper objectMapper;
 
     public static void main(String[] args) {
         SpringApplication.run(YtCloneApplication.class, args);
     }
 
+    @Override
+    public void run(String... args) throws Exception {
+        //Load initial data from videos directory in the project
+        try (Stream<Path> pathStream = Files.list(Path.of("videos"))) {
+            List<Video> videos = pathStream.filter(file -> file.endsWith(".mp4"))
+                    .map(file -> {
+                        ProcessBuilder processBuilder = new ProcessBuilder("ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", file.toAbsolutePath().toString());
+                        processBuilder.redirectErrorStream(true);
+                        try {
+                            Process process = processBuilder.start();
+                            try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                                JsonNode jsonNode = objectMapper.readTree(bufferedReader);
+                                String duration = jsonNode.get("format").get("duration").asString();
+                                Duration videoDuration = Duration.ofMillis(Math.round(Double.parseDouble(duration) * 1000));
+                                return new Video(UUID.randomUUID(), file.getFileName().toString(), VideoRepository.svgThumbnail, file.getFileName().toString(), videoDuration.getSeconds());
+                            }
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).toList();
+
+            videoRepository.save(videos);
+        }
+    }
 }

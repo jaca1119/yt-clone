@@ -3,13 +3,11 @@ package com.example.ytclone.infrastructure.persistence;
 import com.example.ytclone.domain.Video;
 import org.springframework.stereotype.Component;
 
-import java.nio.file.Path;
 import java.util.List;
-import java.util.UUID;
 
 @Component
 public class VideoRepository {
-    String svgThumbnail = """
+    public static String svgThumbnail = """
             <svg
                    width="512"
                    viewBox="0 0 512 512"
@@ -39,11 +37,13 @@ public class VideoRepository {
                    </defs>
                  </svg>""";
 
+    private List<Video> videos;
+
     public List<Video> getVideos() {
-        return List.of(
-                new Video(UUID.randomUUID(), Path.of("/tmp"), svgThumbnail, "Video title 1", 96),
-                new Video(UUID.randomUUID(), Path.of("/tmp"), svgThumbnail, "Video title 2", 67),
-                new Video(UUID.randomUUID(), Path.of("/tmp"), svgThumbnail, "Video title 3", 7875)
-                );
+        return videos;
+    }
+
+    public void save(List<Video> videos) {
+        this.videos = videos;
     }
 }

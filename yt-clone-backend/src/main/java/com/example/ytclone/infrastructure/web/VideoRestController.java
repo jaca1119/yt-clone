@@ -2,12 +2,20 @@ package com.example.ytclone.infrastructure.web;
 
 import com.example.ytclone.application.VideoService;
 import com.example.ytclone.domain.Video;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/videos")
 public class VideoRestController {
@@ -22,5 +30,15 @@ public class VideoRestController {
     public List<Video> getVideos() {
         return videoService.getVideos();
     }
+
+    //Spring handles range automatically
+    @GetMapping("/{id}")
+    public ResponseEntity<Resource> streamVideo(@PathVariable UUID id ) {
+        FileSystemResource fileSystemResource = videoService.getVideoResource(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("video/mp4"))
+                .body(fileSystemResource);
+    }
+
 
 }

@@ -37,6 +37,7 @@ public class SecurityConfig {
                 .formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/videos").permitAll()
+                        .requestMatchers("/videos/*").permitAll()
                         .anyRequest().authenticated()
                 );
 
