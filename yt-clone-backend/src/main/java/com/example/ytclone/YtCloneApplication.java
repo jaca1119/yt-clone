@@ -3,6 +3,7 @@ package com.example.ytclone;
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.persistence.VideoRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -33,7 +34,7 @@ public class YtCloneApplication implements CommandLineRunner {
     }
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String @NonNull ... args) throws Exception {
         //Load initial data from videos directory in the project
         try (Stream<Path> pathStream = Files.list(Path.of("videos"))) {
             List<Video> videos = pathStream.filter(file -> file.getFileName().toString().endsWith(".mp4"))
