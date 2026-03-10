@@ -28,3 +28,4 @@ Use cases:
 ## Requirements
 
 - ffprobe on the system to scan initial videos
+- ffmpeg on the system to generate thumbnail
