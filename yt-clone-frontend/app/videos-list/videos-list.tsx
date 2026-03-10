@@ -11,8 +11,8 @@ export function VideosList({ videos }: { videos: Video[] }) {
             <Link to={"/video/" + id} key={id}>
               <div className="relative">
                 <img
-                  className="w-75"
-                  src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(thumbnail)}`}
+                  className="w-[320px] h-45"
+                  src={`http://localhost:8080/videos/${id}/thumbnail`}
                 />
                 <span className="p-1 bg-black text-white rounded-xl absolute right-1 bottom-1">
                   {length >= 3600

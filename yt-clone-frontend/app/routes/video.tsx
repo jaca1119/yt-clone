@@ -7,6 +7,7 @@ export default function Video({ params }: Route.ComponentProps) {
         className="w-5xl"
         controls
         src={"http://localhost:8080/videos/" + params.id}
+        poster={`http://localhost:8080/videos/${params.id}/thumbnail`}
       ></video>
     </div>
   );
