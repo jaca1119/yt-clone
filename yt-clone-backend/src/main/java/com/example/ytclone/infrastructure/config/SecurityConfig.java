@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/videos").permitAll()
                         .requestMatchers("/videos/*").permitAll()
+                        .requestMatchers("/videos/*/thumbnail").permitAll()
                         .anyRequest().authenticated()
                 );
 

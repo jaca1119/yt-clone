@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -31,14 +32,19 @@ public class VideoRestController {
         return videoService.getVideos();
     }
 
+    //TODO add validation
     //Spring handles range automatically
     @GetMapping("/{id}")
-    public ResponseEntity<Resource> streamVideo(@PathVariable UUID id ) {
+    public ResponseEntity<Resource> streamVideo(@PathVariable UUID id) {
         FileSystemResource fileSystemResource = videoService.getVideoResource(id);
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("video/mp4"))
                 .body(fileSystemResource);
     }
 
-
+    @GetMapping("/{id}/thumbnail")
+    public ResponseEntity<Resource> getVideoThumbnail(@PathVariable UUID id) {
+        Optional<Resource> thumbnail = videoService.getVideoThumbnail(id);
+        return ResponseEntity.of(thumbnail);
+    }
 }
