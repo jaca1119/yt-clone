@@ -25,13 +25,17 @@ public class VideoService {
         return videoRepository.getVideos();
     }
 
-    public FileSystemResource getVideoResource(UUID id) {
-        Video video = videoRepository.getVideos().stream().filter(v -> v.getId().equals(id)).toList().get(0);
-        return new FileSystemResource("videos/%s".formatted(video.getFilename()));
+    public Optional<Resource> getVideoResource(UUID id) {
+        return videoRepository.getVideos().stream()
+                .filter(v -> v.getId().equals(id))
+                .findFirst()
+                .map(video -> new FileSystemResource("videos/%s".formatted(video.getFilename())));
     }
 
     public Optional<Resource> getVideoThumbnail(UUID id) {
-        Optional<Video> first = videoRepository.getVideos().stream().filter(v -> v.getId().equals(id)).findFirst();
-        return first.map(video -> new FileSystemResource("videos/thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])));
+        return videoRepository.getVideos().stream()
+                .filter(v -> v.getId().equals(id))
+                .findFirst()
+                .map(video -> new FileSystemResource("videos/thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])));
     }
 }

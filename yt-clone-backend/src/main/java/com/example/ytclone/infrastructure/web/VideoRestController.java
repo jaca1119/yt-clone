@@ -3,7 +3,6 @@ package com.example.ytclone.infrastructure.web;
 import com.example.ytclone.application.VideoService;
 import com.example.ytclone.domain.Video;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -32,14 +31,15 @@ public class VideoRestController {
         return videoService.getVideos();
     }
 
-    //TODO add validation
     //Spring handles range automatically
     @GetMapping("/{id}")
     public ResponseEntity<Resource> streamVideo(@PathVariable UUID id) {
-        FileSystemResource fileSystemResource = videoService.getVideoResource(id);
-        return ResponseEntity.ok()
+        Optional<Resource> fileSystemResource = videoService.getVideoResource(id);
+
+        return fileSystemResource.map(resource -> ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("video/mp4"))
-                .body(fileSystemResource);
+                .body(resource)).orElseGet(() -> ResponseEntity.notFound().build());
+
     }
 
     @GetMapping("/{id}/thumbnail")
