@@ -2,6 +2,7 @@ package com.example.ytclone;
 
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.persistence.VideoRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+@Slf4j
 @SpringBootApplication
 public class YtCloneApplication implements CommandLineRunner {
     @Autowired
@@ -34,7 +36,7 @@ public class YtCloneApplication implements CommandLineRunner {
     public void run(String... args) throws Exception {
         //Load initial data from videos directory in the project
         try (Stream<Path> pathStream = Files.list(Path.of("videos"))) {
-            List<Video> videos = pathStream.filter(file -> file.endsWith(".mp4"))
+            List<Video> videos = pathStream.filter(file -> file.getFileName().toString().endsWith(".mp4"))
                     .map(file -> {
                         ProcessBuilder processBuilder = new ProcessBuilder("ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", file.toAbsolutePath().toString());
                         processBuilder.redirectErrorStream(true);
@@ -44,7 +46,7 @@ public class YtCloneApplication implements CommandLineRunner {
                                 JsonNode jsonNode = objectMapper.readTree(bufferedReader);
                                 String duration = jsonNode.get("format").get("duration").asString();
                                 Duration videoDuration = Duration.ofMillis(Math.round(Double.parseDouble(duration) * 1000));
-                                return new Video(UUID.randomUUID(), file.getFileName().toString(), VideoRepository.svgThumbnail, file.getFileName().toString(), videoDuration.getSeconds());
+                                return new Video(UUID.randomUUID(), file.getFileName().toString(), VideoRepository.svgThumbnail, file.getFileName().toString().split(".mp4")[0], videoDuration.getSeconds());
                             }
                         } catch (IOException e) {
                             throw new RuntimeException(e);
