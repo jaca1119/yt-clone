@@ -38,3 +38,7 @@ out/
 
 videos/*
 !videos/README.md
+#videos/thumbnails/*
+!videos/thumbnails
+videos/thumbnails/*
+!videos/thumbnails/README.md

@@ -10,7 +10,6 @@ import java.util.UUID;
 public class Video {
     private UUID id;
     private String filename;
-    private String thumbnail;
     private String title;
     private long length;
 }

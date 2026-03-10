@@ -47,7 +47,14 @@ public class YtCloneApplication implements CommandLineRunner {
                                 JsonNode jsonNode = objectMapper.readTree(bufferedReader);
                                 String duration = jsonNode.get("format").get("duration").asString();
                                 Duration videoDuration = Duration.ofMillis(Math.round(Double.parseDouble(duration) * 1000));
-                                return new Video(UUID.randomUUID(), file.getFileName().toString(), VideoRepository.svgThumbnail, file.getFileName().toString().split(".mp4")[0], videoDuration.getSeconds());
+
+                                String filenameWithoutExtension = file.getFileName().toString().split(".mp4")[0];
+                                ProcessBuilder pb = new ProcessBuilder("ffmpeg", "-ss", "00:00:01.000", "-i", file.toAbsolutePath().toString(), "-vframes", "1", "videos/thumbnails/%s.jpg".formatted(filenameWithoutExtension));
+                                pb.redirectErrorStream(true);
+                                //wait for?
+                                pb.start();
+
+                                return new Video(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, videoDuration.getSeconds());
                             }
                         } catch (IOException e) {
                             throw new RuntimeException(e);
