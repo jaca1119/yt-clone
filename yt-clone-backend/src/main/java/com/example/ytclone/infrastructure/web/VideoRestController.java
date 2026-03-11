@@ -38,7 +38,8 @@ public class VideoRestController {
 
         return fileSystemResource.map(resource -> ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("video/mp4"))
-                .body(resource)).orElseGet(() -> ResponseEntity.notFound().build());
+                .body(resource))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}/metadata")
