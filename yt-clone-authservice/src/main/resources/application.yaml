@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: yt-clone-authservice
+server:
+  port: 9090
+  servlet:
+    session:
+      cookie:
+        name: AUTHSESSIONID
+#logging:
+#  level:
+#    org.springframework.security: trace
