@@ -9,6 +9,9 @@ import {
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { isLoggedin, redirectToOauth2Authorization } from "./scripts/auth";
+import { Link } from "react-router";
+import { useEffect, useState } from "react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -24,6 +27,11 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const [isAuthenticated, setAuthenticated] = useState(false);
+  useEffect(() => {
+    setAuthenticated(isLoggedin());
+  });
+
   return (
     <html lang="en">
       <head>
@@ -33,7 +41,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <main className="flex items-center justify-center pt-16 pb-4">
+          <div className="flex-1 flex flex-col items-center gap-16 min-h-0">
+            <div className="flex w-full flex-row items-start justify-around justify-items-start">
+              <Link to="/" className="font-bold text-2xl self-baseline">
+                YT-clone
+              </Link>
+              <div>
+                {isAuthenticated ? (
+                  <p className="px-4 py-2 bg-indigo-600 text-white rounded">
+                    Logged in
+                  </p>
+                ) : (
+                  <button
+                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                    onClick={redirectToOauth2Authorization}
+                  >
+                    Login
+                  </button>
+                )}
+              </div>
+            </div>
+            {children}
+          </div>
+        </main>
         <ScrollRestoration />
         <Scripts />
       </body>

@@ -87,3 +87,7 @@ export async function handleCallback() {
   window.history.replaceState({}, document.title, "/");
   window.location.href = "/";
 }
+
+export function isLoggedin() {
+  return !!sessionStorage.getItem("access_token");
+}

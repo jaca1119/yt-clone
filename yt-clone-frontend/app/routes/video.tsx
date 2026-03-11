@@ -32,7 +32,7 @@ export default function Video({ params }: Route.ComponentProps) {
         src={`http://localhost:8080/videos/${params.id}`}
         poster={`http://localhost:8080/videos/${params.id}/thumbnail`}
       ></video>
-      <div className="self-start ">
+      <div className="self-start">
         <p className="text-2xl font-bold">{video.title}</p>
         <p>Uploaded: {dayjs(video.uploadDate).format("LL")}</p>
       </div>
