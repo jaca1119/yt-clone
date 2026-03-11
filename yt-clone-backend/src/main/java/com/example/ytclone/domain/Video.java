@@ -3,6 +3,7 @@ package com.example.ytclone.domain;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -12,4 +13,5 @@ public class Video {
     private String filename;
     private String title;
     private long length;
+    private LocalDateTime uploadDate;
 }

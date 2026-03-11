@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
@@ -54,7 +55,7 @@ public class YtCloneApplication implements CommandLineRunner {
                                 //wait for?
                                 pb.start();
 
-                                return new Video(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, videoDuration.getSeconds());
+                                return new Video(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, videoDuration.getSeconds(), LocalDateTime.now());
                             }
                         } catch (IOException e) {
                             throw new RuntimeException(e);

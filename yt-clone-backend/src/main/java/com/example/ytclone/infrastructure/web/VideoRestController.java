@@ -41,6 +41,12 @@ public class VideoRestController {
                 .body(resource)).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{id}/metadata")
+    public ResponseEntity<Video> getVideo(@PathVariable UUID id) {
+        return ResponseEntity.of(videoService.getVideos().stream().filter(v -> v.getId().equals(id)).findFirst());
+    }
+
+
     @GetMapping("/{id}/thumbnail")
     public ResponseEntity<Resource> getVideoThumbnail(@PathVariable UUID id) {
         Optional<Resource> thumbnail = videoService.getVideoThumbnail(id);
