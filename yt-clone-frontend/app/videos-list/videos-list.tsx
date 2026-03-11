@@ -1,6 +1,9 @@
 import { Link } from "react-router";
 import type { Video } from "~/routes/home";
 import { redirectToOauth2Authorization } from "~/scripts/auth";
+import dayjs from "dayjs";
+import RelativeTime from "dayjs/plugin/relativeTime";
+dayjs.extend(RelativeTime);
 
 export function VideosList({ videos }: { videos: Video[] }) {
   return (
@@ -11,8 +14,17 @@ export function VideosList({ videos }: { videos: Video[] }) {
           <button onClick={redirectToOauth2Authorization}>Login</button>
         </div>
         <div className="flex flex-wrap gap-3 ml-5">
-          {videos.map(({ id, title, length }) => (
-            <Link to={"/video/" + id} key={id}>
+          {videos.map(({ id, title, length, uploadDate }) => (
+            <Link
+              to={`/video/${id}`}
+              key={id}
+              state={{
+                id: id,
+                title: title,
+                length: length,
+                uploadDate: uploadDate,
+              }}
+            >
               <div className="relative">
                 <img
                   className="w-[320px] h-45"
@@ -32,6 +44,7 @@ export function VideosList({ videos }: { videos: Video[] }) {
                 </span>
               </div>
               <div>{title}</div>
+              <div>{dayjs(uploadDate).fromNow()}</div>
             </Link>
           ))}
         </div>

@@ -12,6 +12,7 @@ export interface Video {
   id: string;
   title: string;
   length: number;
+  uploadDate: string;
 }
 
 export async function clientLoader() {
@@ -24,8 +25,9 @@ export async function clientLoader() {
         id: "1",
         title: "title",
         length: 12,
+        uploadDate: new Date().toISOString(),
       },
-    ];
+    ] as Video[];
   }
 }
 
