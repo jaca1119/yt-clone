@@ -12,12 +12,21 @@ export interface Video {
   id: string;
   title: string;
   length: number;
-  thumbnail: string;
 }
 
 export async function clientLoader() {
-  const res = await fetch("http://localhost:8080/videos");
-  return (await res.json()) as Video[];
+  try {
+    const res = await fetch("http://localhost:8080/videos");
+    return (await res.json()) as Video[];
+  } catch {
+    return [
+      {
+        id: "1",
+        title: "title",
+        length: 12,
+      },
+    ];
+  }
 }
 
 export function HydrateFallback() {
