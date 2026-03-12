@@ -17,4 +17,8 @@ public class VideoRepository {
     public void save(List<Video> videos) {
         this.videos = videos;
     }
+
+    public void save(Video video) {
+        videos.add(video);
+    }
 }

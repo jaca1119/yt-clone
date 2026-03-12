@@ -6,11 +6,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,5 +55,25 @@ public class VideoRestController {
     public ResponseEntity<Resource> getVideoThumbnail(@PathVariable UUID id) {
         Optional<Resource> thumbnail = videoService.getVideoThumbnail(id);
         return ResponseEntity.of(thumbnail);
+    }
+
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<UUID> uploadVideo(@RequestPart(name = "file") MultipartFile multipartFile, @AuthenticationPrincipal Jwt principal) {
+
+        if (multipartFile.getOriginalFilename() != null && !multipartFile.getOriginalFilename().endsWith(".mp4")) {
+            return ResponseEntity.badRequest().build();
+        }
+        //TODO after file transfer and validation file processing could be done async
+        UUID id = UUID.randomUUID();
+        File file = Path.of("videos/%s.mp4".formatted(id)).toAbsolutePath().toFile();
+        log.info("file: {}", file.getAbsolutePath());
+        try {
+            multipartFile.transferTo(file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        videoService.saveVideo(id, file);
+
+        return ResponseEntity.ok().body(id);
     }
 }

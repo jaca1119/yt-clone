@@ -12,14 +12,16 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -57,10 +59,12 @@ public class YtCloneApplication implements CommandLineRunner {
 
                                 return new Video(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, videoDuration.getSeconds(), LocalDateTime.now());
                             }
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                        } catch (Exception e) {
+                            //skip when exception, filter later
+                            return null;
                         }
-                    }).toList();
+                    }).filter(Objects::nonNull)
+                    .collect(Collectors.toCollection(ArrayList::new));
 
             videoRepository.save(videos);
         }
