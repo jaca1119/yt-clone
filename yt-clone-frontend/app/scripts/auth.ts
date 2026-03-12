@@ -91,3 +91,13 @@ export async function handleCallback() {
 export function isLoggedin() {
   return !!sessionStorage.getItem("access_token");
 }
+
+export function getAccessToken() {
+  return sessionStorage.getItem("access_token") || "";
+}
+
+export function logout() {
+  sessionStorage.removeItem("access_token");
+  sessionStorage.removeItem("id_token");
+  sessionStorage.removeItem("refresh_token");
+}
