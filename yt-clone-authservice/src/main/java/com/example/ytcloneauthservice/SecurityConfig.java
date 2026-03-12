@@ -82,12 +82,8 @@ public class SecurityConfig {
             throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/hello").permitAll()
                         .anyRequest().authenticated()
                 )
-
-                .csrf(AbstractHttpConfigurer::disable)
-//                .oauth2ResourceServer(oauth2 -> oauth2.jwt(withDefaults()))
                 // Form login handles the redirect to the login page from the
                 // authorization server filter chain
                 .formLogin(withDefaults());
