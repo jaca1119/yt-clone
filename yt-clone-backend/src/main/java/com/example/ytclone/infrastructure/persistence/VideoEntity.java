@@ -1,5 +1,6 @@
 package com.example.ytclone.infrastructure.persistence;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,8 @@ public class VideoEntity {
 
     private String filename;
     private String title;
+    @Column(nullable = false, updatable = false)
+    private String createdBy;
     private long length;
     private LocalDateTime uploadDate;
 }

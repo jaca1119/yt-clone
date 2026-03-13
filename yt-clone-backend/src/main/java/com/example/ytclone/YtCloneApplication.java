@@ -57,7 +57,7 @@ public class YtCloneApplication implements CommandLineRunner {
                                 //wait for?
                                 pb.start();
 
-                                return new VideoEntity(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, videoDuration.getSeconds(), LocalDateTime.now());
+                                return new VideoEntity(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, "System", videoDuration.getSeconds(), LocalDateTime.now());
                             }
                         } catch (Exception e) {
                             //skip when exception, filter later

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+//TODO rest controller should return DTO instead of domain object
 @Slf4j
 @RestController
 @RequestMapping("/videos")
@@ -49,7 +50,7 @@ public class VideoRestController {
 
     @GetMapping("/{id}/metadata")
     public ResponseEntity<Video> getVideo(@PathVariable UUID id) {
-        return ResponseEntity.of(videoService.getVideos().stream().filter(v -> v.getId().equals(id)).findFirst());
+        return ResponseEntity.of(videoService.getVideo(id));
     }
 
 
@@ -74,7 +75,7 @@ public class VideoRestController {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        videoService.saveVideo(id, file, LocalDateTime.now());
+        videoService.saveVideo(id, file, LocalDateTime.now(), principal.getSubject());
 
         return ResponseEntity.ok().body(id);
     }

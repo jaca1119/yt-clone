@@ -27,6 +27,10 @@ public class VideoService {
         this.videoProcessor = videoProcessor;
     }
 
+    public Optional<Video> getVideo(UUID id) {
+        return videoRepository.findById(id).map(this::toVideo);
+    }
+
     public List<Video> getVideos() {
         return videoRepository.findAll().stream().map(this::toVideo).toList();
     }
@@ -41,14 +45,14 @@ public class VideoService {
                 .map(video -> Path.of("videos/thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath());
     }
 
-    public void saveVideo(UUID id, File file, LocalDateTime uploadDateTime) {
+    public void saveVideo(UUID id, File file, LocalDateTime uploadDateTime, String creator) {
         Duration duration = videoProcessor.getDuration(file);
         videoProcessor.generateThumbnail(file, "%s.jpg".formatted(id));
 
-        videoRepository.save(new VideoEntity(id, file.getName(), file.getName(), duration.getSeconds(), uploadDateTime));
+        videoRepository.save(new VideoEntity(id, file.getName(), file.getName(), creator, duration.getSeconds(), uploadDateTime));
     }
 
     private Video toVideo(VideoEntity videoEntity) {
-        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getLength(), videoEntity.getUploadDate());
+        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate());
     }
 }

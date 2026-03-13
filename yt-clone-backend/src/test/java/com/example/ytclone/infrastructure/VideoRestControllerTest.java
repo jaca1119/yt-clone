@@ -131,7 +131,7 @@ public class VideoRestControllerTest {
 
     @Test
     void shouldUploadVideoForUser() throws Exception {
-        String id = null;
+        String videoId = null;
         try {
             MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
             //given 4 initial videos
@@ -144,21 +144,30 @@ public class VideoRestControllerTest {
             String contentId = mockMvc.perform(multipart("/videos").file(file).with(jwt()))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
-            id = contentId.substring(1, contentId.lastIndexOf("\""));
+            String id = contentId.substring(1, contentId.lastIndexOf("\""));
+            videoId = id;
 
-            String finalId = id;
-            assertThatCode(() -> UUID.fromString(finalId)).doesNotThrowAnyException();
+            assertThatCode(() -> UUID.fromString(id)).doesNotThrowAnyException();
 
             //then expect 5 videos
             assertThat(mockMvcTester.get().uri("/videos"))
                     .bodyJson()
                     .convertTo(InstanceOfAssertFactories.LIST)
                     .hasSize(5);
+
+            mockMvcTester.get().uri("/videos/{id}/metadata", id)
+                    .assertThat()
+                    .bodyJson()
+                    .convertTo(Video.class)
+                    .satisfies(video -> {
+                        assertThat(video.getCreator()).isEqualTo("user");
+                    });
+
         } finally {
-            if (id != null) {
+            if (videoId != null) {
                 //cleanup delete created files
-                Files.deleteIfExists(Path.of("videos/%s.mp4".formatted(id)));
-                Files.deleteIfExists(Path.of("videos/thumbnails/%s.jpg".formatted(id)));
+                Files.deleteIfExists(Path.of("videos/%s.mp4".formatted(videoId)));
+                Files.deleteIfExists(Path.of("videos/thumbnails/%s.jpg".formatted(videoId)));
             }
         }
     }

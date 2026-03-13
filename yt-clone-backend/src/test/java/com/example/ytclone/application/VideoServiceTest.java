@@ -1,7 +1,7 @@
 package com.example.ytclone.application;
 
+import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.media.VideoProcessor;
-import com.example.ytclone.infrastructure.persistence.VideoEntity;
 import com.example.ytclone.infrastructure.persistence.VideoRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -27,7 +27,7 @@ public class VideoServiceTest {
     void shouldReturnPathToVideoFile() {
         //given
         UUID id = UUID.randomUUID();
-        videoService.saveVideo(id, new File("test.mp4"), LocalDateTime.now());
+        videoService.saveVideo(id, new File("test.mp4"), LocalDateTime.now(), "test");
 
         //when
         Optional<Path> videoFilePath = videoService.getVideoFilePath(id);
@@ -41,7 +41,7 @@ public class VideoServiceTest {
     void shouldReturnPathToVideoThumbnail() {
         //given
         UUID id = UUID.randomUUID();
-        videoService.saveVideo(id, new File("test.mp4"), LocalDateTime.now());
+        videoService.saveVideo(id, new File("test.mp4"), LocalDateTime.now(), "test");
 
         //when
         Optional<Path> videoThumbnailFilePath = videoService.getVideoThumbnailFilePath(id);
@@ -60,11 +60,11 @@ public class VideoServiceTest {
         when(videoProcessor.getDuration(any())).thenReturn(Duration.ofSeconds(123));
 
         //when
-        videoService.saveVideo(id, file, uploadDatetime);
+        videoService.saveVideo(id, file, uploadDatetime, "test");
 
         //then
-        Optional<VideoEntity> videoEntity = videoRepository.findById(id);
-        assertThat(videoEntity).isPresent();
-        assertThat(videoEntity.get()).isEqualTo(new VideoEntity(id, file.getName(), file.getName(), 123, uploadDatetime));
+        Optional<Video> video = videoService.getVideo(id);
+        assertThat(video).isPresent();
+        assertThat(video.get()).isEqualTo(new Video(id, file.getName(), file.getName(), "test", 123, uploadDatetime));
     }
 }

@@ -12,6 +12,7 @@ public class Video {
     private UUID id;
     private String filename;
     private String title;
+    private String creator;
     private long length;
     private LocalDateTime uploadDate;
 }
