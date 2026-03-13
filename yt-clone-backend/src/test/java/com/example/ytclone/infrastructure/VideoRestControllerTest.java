@@ -129,31 +129,36 @@ public class VideoRestControllerTest {
 
     @Test
     void shouldUploadVideoForUser() throws Exception {
+        String id = null;
+        try {
+            MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
+            //given 4 initial videos
+            assertThat(mockMvcTester.get().uri("/videos"))
+                    .bodyJson()
+                    .convertTo(InstanceOfAssertFactories.LIST)
+                    .hasSize(4);
 
-        MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
-        //given 4 initial videos
-        assertThat(mockMvcTester.get().uri("/videos"))
-                .bodyJson()
-                .convertTo(InstanceOfAssertFactories.LIST)
-                .hasSize(4);
+            //when upload file
+            String contentId = mockMvc.perform(multipart("/videos").file(file).with(jwt()))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsString();
+            id = contentId.substring(1, contentId.lastIndexOf("\""));
 
-        //when upload file
-        String contentId = mockMvc.perform(multipart("/videos").file(file).with(jwt()))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        String id = contentId.substring(1, contentId.lastIndexOf("\""));
+            String finalId = id;
+            assertThatCode(() -> UUID.fromString(finalId)).doesNotThrowAnyException();
 
-        assertThatCode(() -> UUID.fromString(id)).doesNotThrowAnyException();
-
-        //then expect 5 videos
-        assertThat(mockMvcTester.get().uri("/videos"))
-                .bodyJson()
-                .convertTo(InstanceOfAssertFactories.LIST)
-                .hasSize(5);
-
-        //cleanup delete created files
-        Files.deleteIfExists(Path.of("videos/%s.mp4".formatted(id)));
-        Files.deleteIfExists(Path.of("videos/thumbnails/%s.jpg".formatted(id)));
+            //then expect 5 videos
+            assertThat(mockMvcTester.get().uri("/videos"))
+                    .bodyJson()
+                    .convertTo(InstanceOfAssertFactories.LIST)
+                    .hasSize(5);
+        } finally {
+            if (id != null) {
+                //cleanup delete created files
+                Files.deleteIfExists(Path.of("videos/%s.mp4".formatted(id)));
+                Files.deleteIfExists(Path.of("videos/thumbnails/%s.jpg".formatted(id)));
+            }
+        }
     }
 
     @Test
