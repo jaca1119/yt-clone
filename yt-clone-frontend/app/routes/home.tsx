@@ -13,6 +13,7 @@ export interface Video {
   title: string;
   length: number;
   uploadDate: string;
+  creator: string;
 }
 
 export async function clientLoader() {

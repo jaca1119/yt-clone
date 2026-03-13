@@ -8,7 +8,7 @@ dayjs.extend(RelativeTime);
 export function VideosList({ videos }: { videos: Video[] }) {
   return (
     <div className="flex flex-wrap gap-3 ml-5">
-      {videos.map(({ id, title, length, uploadDate }) => (
+      {videos.map(({ id, title, length, uploadDate, creator }) => (
         <Link
           to={`/video/${id}`}
           key={id}
@@ -17,6 +17,7 @@ export function VideosList({ videos }: { videos: Video[] }) {
             title: title,
             length: length,
             uploadDate: uploadDate,
+            creator: creator,
           }}
         >
           <div className="relative">
@@ -39,6 +40,7 @@ export function VideosList({ videos }: { videos: Video[] }) {
           </div>
           <div>{title}</div>
           <div>{dayjs(uploadDate).fromNow()}</div>
+          <div>Uploaded by: {creator} </div>
         </Link>
       ))}
     </div>
