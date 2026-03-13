@@ -1,24 +1,9 @@
 package com.example.ytclone.infrastructure.persistence;
 
-import com.example.ytclone.domain.Video;
-import org.springframework.stereotype.Component;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
+import java.util.UUID;
 
-@Component
-public class VideoRepository {
 
-    private List<Video> videos;
-
-    public List<Video> getVideos() {
-        return videos;
-    }
-
-    public void save(List<Video> videos) {
-        this.videos = videos;
-    }
-
-    public void save(Video video) {
-        videos.add(video);
-    }
+public interface VideoRepository extends JpaRepository<VideoEntity, UUID> {
 }

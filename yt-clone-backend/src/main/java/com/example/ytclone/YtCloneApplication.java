@@ -1,6 +1,6 @@
 package com.example.ytclone;
 
-import com.example.ytclone.domain.Video;
+import com.example.ytclone.infrastructure.persistence.VideoEntity;
 import com.example.ytclone.infrastructure.persistence.VideoRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
@@ -40,7 +40,7 @@ public class YtCloneApplication implements CommandLineRunner {
     public void run(String @NonNull ... args) throws Exception {
         //Load initial data from videos directory in the project
         try (Stream<Path> pathStream = Files.list(Path.of("videos"))) {
-            List<Video> videos = pathStream.filter(file -> file.getFileName().toString().endsWith(".mp4"))
+            List<VideoEntity> videos = pathStream.filter(file -> file.getFileName().toString().endsWith(".mp4"))
                     .map(file -> {
                         ProcessBuilder processBuilder = new ProcessBuilder("ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", file.toAbsolutePath().toString());
                         processBuilder.redirectErrorStream(true);
@@ -57,7 +57,7 @@ public class YtCloneApplication implements CommandLineRunner {
                                 //wait for?
                                 pb.start();
 
-                                return new Video(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, videoDuration.getSeconds(), LocalDateTime.now());
+                                return new VideoEntity(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, videoDuration.getSeconds(), LocalDateTime.now());
                             }
                         } catch (Exception e) {
                             //skip when exception, filter later
@@ -66,7 +66,7 @@ public class YtCloneApplication implements CommandLineRunner {
                     }).filter(Objects::nonNull)
                     .collect(Collectors.toCollection(ArrayList::new));
 
-            videoRepository.save(videos);
+            videoRepository.saveAll(videos);
         }
     }
 }
