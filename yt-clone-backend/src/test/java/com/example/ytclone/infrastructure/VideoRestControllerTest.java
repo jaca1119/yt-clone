@@ -48,10 +48,12 @@ public class VideoRestControllerTest {
     @BeforeAll
     static void setUp() throws IOException, InterruptedException {
         //TODO test if already exist then skip
-        Files.createDirectories(Path.of("videos/tests"));
-        ProcessBuilder pb = new ProcessBuilder("ffmpeg", "-f", "lavfi", "-i", "smptebars", "-t", "30", "videos/tests/smpte.mp4");
-        pb.redirectErrorStream(true);
-        pb.start().waitFor(Duration.ofSeconds(5));
+        if (!Files.exists(Path.of("videos/tests/smpte.mp4"))) {
+            Files.createDirectories(Path.of("videos/tests"));
+            ProcessBuilder pb = new ProcessBuilder("ffmpeg", "-f", "lavfi", "-i", "smptebars", "-t", "30", "videos/tests/smpte.mp4");
+            pb.redirectErrorStream(true);
+            pb.start().waitFor(Duration.ofSeconds(5));
+        }
         testUploadFile = new File("videos/tests/smpte.mp4");
     }
 
