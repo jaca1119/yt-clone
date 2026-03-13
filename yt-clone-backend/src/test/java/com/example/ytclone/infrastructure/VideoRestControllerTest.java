@@ -1,4 +1,4 @@
-package com.example.ytclone;
+package com.example.ytclone.infrastructure;
 
 import com.example.ytclone.domain.Video;
 import org.assertj.core.api.InstanceOfAssertFactories;

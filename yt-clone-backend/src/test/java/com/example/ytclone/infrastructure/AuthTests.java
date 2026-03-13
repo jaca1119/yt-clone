@@ -1,4 +1,4 @@
-package com.example.ytclone;
+package com.example.ytclone.infrastructure;
 
 import com.example.ytclone.application.VideoService;
 import com.example.ytclone.infrastructure.persistence.VideoRepository;
