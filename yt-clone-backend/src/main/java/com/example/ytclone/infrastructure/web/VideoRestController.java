@@ -3,6 +3,7 @@ package com.example.ytclone.infrastructure.web;
 import com.example.ytclone.application.VideoService;
 import com.example.ytclone.domain.Video;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,7 @@ public class VideoRestController {
     //Spring handles range automatically
     @GetMapping("/{id}")
     public ResponseEntity<Resource> streamVideo(@PathVariable UUID id) {
-        Optional<Resource> fileSystemResource = videoService.getVideoResource(id);
+        Optional<Resource> fileSystemResource = videoService.getVideoFilePath(id).map(FileSystemResource::new);
 
         return fileSystemResource.map(resource -> ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType("video/mp4"))
@@ -53,7 +54,7 @@ public class VideoRestController {
 
     @GetMapping("/{id}/thumbnail")
     public ResponseEntity<Resource> getVideoThumbnail(@PathVariable UUID id) {
-        Optional<Resource> thumbnail = videoService.getVideoThumbnail(id);
+        Optional<Resource> thumbnail = videoService.getVideoThumbnailFilePath(id).map(FileSystemResource::new);
         return ResponseEntity.of(thumbnail);
     }
 

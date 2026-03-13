@@ -3,14 +3,13 @@ package com.example.ytclone.application;
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.persistence.VideoRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,18 +30,18 @@ public class VideoService {
         return videoRepository.getVideos();
     }
 
-    public Optional<Resource> getVideoResource(UUID id) {
+    public Optional<Path> getVideoFilePath(UUID id) {
         return videoRepository.getVideos().stream()
                 .filter(v -> v.getId().equals(id))
                 .findFirst()
-                .map(video -> new FileSystemResource("videos/%s".formatted(video.getFilename())));
+                .map(video -> Path.of("videos/%s".formatted(video.getFilename())).toAbsolutePath());
     }
 
-    public Optional<Resource> getVideoThumbnail(UUID id) {
+    public Optional<Path> getVideoThumbnailFilePath(UUID id) {
         return videoRepository.getVideos().stream()
                 .filter(v -> v.getId().equals(id))
                 .findFirst()
-                .map(video -> new FileSystemResource("videos/thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])));
+                .map(video -> Path.of("videos/thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath());
     }
 
     public void saveVideo(UUID id, File file) {
