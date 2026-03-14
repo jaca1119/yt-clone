@@ -33,7 +33,7 @@ export async function clientLoader() {
 }
 
 export function HydrateFallback() {
-  return <div>Loading...</div>;
+  return <VideosList isLoading />;
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
