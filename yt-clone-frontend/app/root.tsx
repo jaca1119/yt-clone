@@ -56,12 +56,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link to="/" className="font-bold text-2xl self-baseline">
                 YT-clone
               </Link>
-              <div>
+              <div className="flex gap-1 items-center">
                 {isAuthenticated ? (
                   <>
-                    <p className="px-4 py-2 bg-indigo-600 text-white rounded">
-                      Logged in
-                    </p>
+                    <p className="px-4 py-2 text-black rounded">Logged in</p>
                     <button
                       className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
                       onClick={handleLogout}
