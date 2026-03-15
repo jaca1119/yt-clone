@@ -4,8 +4,12 @@ import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.media.VideoProcessor;
 import com.example.ytclone.infrastructure.persistence.VideoEntity;
 import com.example.ytclone.infrastructure.persistence.VideoRepository;
+import com.example.ytclone.infrastructure.web.VideoUpdateDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -54,5 +58,17 @@ public class VideoService {
 
     private Video toVideo(VideoEntity videoEntity) {
         return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate());
+    }
+
+    @Transactional
+    public void updateVideo(UUID id, VideoUpdateDTO updateDTO, String user) {
+        videoRepository.findByIdAndCreatedBy(id, user)
+                .ifPresentOrElse(videoEntity -> {
+                    updateDTO.title().ifPresent(videoEntity::setTitle);
+
+                    videoRepository.save(videoEntity);
+                }, () -> {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                });
     }
 }

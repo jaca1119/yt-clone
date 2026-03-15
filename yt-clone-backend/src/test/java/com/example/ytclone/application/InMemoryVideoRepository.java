@@ -167,4 +167,9 @@ public class  InMemoryVideoRepository implements VideoRepository {
     public Page<VideoEntity> findAll(Pageable pageable) {
         return null;
     }
+
+    @Override
+    public Optional<VideoEntity> findByIdAndCreatedBy(UUID id, String user) {
+        return Optional.empty();
+    }
 }

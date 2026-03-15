@@ -79,4 +79,11 @@ public class VideoRestController {
 
         return ResponseEntity.ok().body(id);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity updateVideo(@PathVariable UUID id, @RequestBody VideoUpdateDTO updateDTO, @AuthenticationPrincipal Jwt principal) {
+
+        videoService.updateVideo(id, updateDTO, principal.getSubject());
+        return ResponseEntity.noContent().build();
+    }
 }
