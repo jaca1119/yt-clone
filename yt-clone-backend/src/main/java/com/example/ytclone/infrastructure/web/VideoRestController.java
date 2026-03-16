@@ -86,4 +86,10 @@ public class VideoRestController {
         videoService.updateVideo(id, updateDTO, principal.getSubject());
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity deleteVideo(@PathVariable UUID id, @AuthenticationPrincipal Jwt principal) {
+        videoService.deleteVideo(id, principal.getSubject());
+        return ResponseEntity.noContent().build();
+    }
 }

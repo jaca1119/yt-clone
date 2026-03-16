@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -22,7 +24,8 @@ import java.util.UUID;
 @Slf4j
 @Service
 public class VideoService {
-
+    private final Path videosDirectory = Path.of("videos").toAbsolutePath();
+    private final Path thumbnailsDirectory = Path.of("videos/thumbnails").toAbsolutePath();
     private final VideoRepository videoRepository;
     private final VideoProcessor videoProcessor;
 
@@ -70,5 +73,35 @@ public class VideoService {
                 }, () -> {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND);
                 });
+    }
+
+    @Transactional
+    public void deleteVideo(UUID id, String user) {
+        videoRepository.findByIdAndCreatedBy(id, user)
+                .ifPresentOrElse(
+                        entity -> {
+                            Path videoFile = videosDirectory.resolve(entity.getFilename()).normalize();
+                            Path thumbnail = thumbnailsDirectory.resolve(entity.getFilename().substring(0, entity.getFilename().lastIndexOf(".mp4")) + ".jpg").normalize();
+
+                            if (videoFile.toString().contains("..") || thumbnail.toString().contains("..")) {
+                                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                            }
+                            if (!videoFile.toString().contains("/videos/") || !thumbnail.toString().contains("/videos/thumbnails/")) {
+                                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                            }
+
+                            videoRepository.delete(entity);
+                            if (Files.isRegularFile(videoFile) && Files.isRegularFile(thumbnail)) {
+                                try {
+                                    Files.deleteIfExists(videoFile);
+                                    Files.deleteIfExists(thumbnail);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        },
+                        () -> {
+                            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                        });
     }
 }

@@ -132,7 +132,7 @@ public class VideoRestControllerTest {
     void shouldNotUploadVideoAsUnauthenticatedUser() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", "file.xd", MediaType.IMAGE_JPEG_VALUE, "fake bytes".getBytes());
         mockMvc.perform(multipart("/videos").file(file))
-                        .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -189,7 +189,7 @@ public class VideoRestControllerTest {
 
     @Test
     void shouldUpdateVideoTitle() throws IOException {
-            UUID id = null;
+        UUID id = null;
         try {
             id = uploadVideo();
 
@@ -205,7 +205,7 @@ public class VideoRestControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(new VideoUpdateDTO(Optional.of(newTitle))))
                             .with(jwt()))
-                            .andExpect(status().isNoContent());
+                    .andExpect(status().isNoContent());
 
             Video videoAfterUpdate = restTestClient.get().uri("/videos/{id}/metadata", id)
                     .exchange()
@@ -267,6 +267,51 @@ public class VideoRestControllerTest {
         }
     }
 
+    @Test
+    void shouldDeleteUserVideo() throws Exception {
+        //given
+        UUID id = uploadVideo();
+
+        //when
+        mockMvcTester.delete().uri("/videos/{id}", id)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.NO_CONTENT);
+
+        //then
+        mockMvcTester.get().uri("/videos/{id}/metadata", id)
+                .assertThat()
+                .hasStatus(HttpStatus.NOT_FOUND);
+        mockMvcTester.get().uri("/videos/{id}", id)
+                .assertThat()
+                .hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void shouldNotDeleteVideoOfDifferentUser() throws Exception {
+        //given
+        UUID id = uploadVideo();
+
+        //when
+        mockMvcTester.delete().uri("/videos/{id}", id)
+                .with(jwt().jwt(jwt -> jwt.subject("different user")))
+                .assertThat()
+                .hasStatus(HttpStatus.NOT_FOUND);
+
+        //then
+        mockMvcTester.get().uri("/videos/{id}/metadata", id)
+                .assertThat()
+                .hasStatusOk();
+        mockMvcTester.get().uri("/videos/{id}", id)
+                .assertThat()
+                .hasStatusOk();
+
+        //cleanup
+        mockMvcTester.delete().uri("/videos/{id}", id)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.NO_CONTENT);
+    }
 
     UUID uploadVideo() throws Exception {
         MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
@@ -276,5 +321,4 @@ public class VideoRestControllerTest {
         return UUID.fromString(contentId.substring(1, contentId.lastIndexOf("\"")));
 
     }
-
 }
