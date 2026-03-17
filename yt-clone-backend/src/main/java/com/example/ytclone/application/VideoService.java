@@ -52,19 +52,29 @@ public class VideoService {
                 .map(video -> Path.of("videos/thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath());
     }
 
-    public void saveVideo(UUID id, File file, LocalDateTime uploadDateTime, String creator) {
-        try {
-            Duration duration = videoProcessor.getDuration(file);
-            videoProcessor.generateThumbnail(file, "%s.jpg".formatted(id));
-            videoRepository.save(new VideoEntity(id, file.getName(), file.getName(), creator, duration.getSeconds(), uploadDateTime));
-        } catch (RuntimeException e) {
-            file.delete();
-            throw e;
-        }
+    @Transactional
+    public UUID startVideoUpload(String title, String user, LocalDateTime uploadTime) {
+        UUID id = UUID.randomUUID();
+        videoRepository.save(new VideoEntity(id, null, title, user, null, uploadTime));
+        return id;
     }
 
-    private Video toVideo(VideoEntity videoEntity) {
-        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate());
+    public void saveVideoFile(UUID id, File file, String creator) {
+        videoRepository.findByIdAndCreatedBy(id, creator)
+                .ifPresentOrElse(videoEntity -> {
+                    try {
+                        Duration duration = videoProcessor.getDuration(file);
+                        videoProcessor.generateThumbnail(file, "%s.jpg".formatted(id));
+                        videoEntity.setFilename(file.getName());
+                        videoEntity.setLength(duration.getSeconds());
+                        videoRepository.save(videoEntity);
+                    } catch (RuntimeException e) {
+                        file.delete();
+                        throw e;
+                    }
+                }, () -> {
+                    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+                });
     }
 
     @Transactional
@@ -85,6 +95,12 @@ public class VideoService {
         videoRepository.findByIdAndCreatedBy(id, user)
                 .ifPresentOrElse(
                         entity -> {
+                            videoRepository.delete(entity);
+
+                            if (entity.getFilename() == null) {
+                                return;
+                            }
+
                             Path videoFile = videosDirectory.resolve(entity.getFilename()).normalize();
                             Path thumbnail = thumbnailsDirectory.resolve(entity.getFilename().substring(0, entity.getFilename().lastIndexOf(".mp4")) + ".jpg").normalize();
 
@@ -96,7 +112,6 @@ public class VideoService {
                             }
 
                             log.info("Deleting {}, {}", videoFile, thumbnail);
-                            videoRepository.delete(entity);
                             if (Files.isRegularFile(videoFile)) {
                                 try {
                                     Files.deleteIfExists(videoFile);
@@ -118,5 +133,9 @@ public class VideoService {
                         () -> {
                             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
                         });
+    }
+
+    private Video toVideo(VideoEntity videoEntity) {
+        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate());
     }
 }

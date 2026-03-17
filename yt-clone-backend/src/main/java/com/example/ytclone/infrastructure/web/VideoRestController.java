@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -60,22 +61,27 @@ public class VideoRestController {
         return ResponseEntity.of(thumbnail);
     }
 
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<UUID> uploadVideo(@RequestPart(name = "file") MultipartFile multipartFile, @AuthenticationPrincipal Jwt principal) {
+    @PostMapping
+    public ResponseEntity<VideoUploadResponse> startVideoUpload(@RequestBody VideoUploadRequest videoUploadRequest, @AuthenticationPrincipal Jwt jwt) {
+        UUID id = videoService.startVideoUpload(videoUploadRequest.title(), jwt.getSubject(), LocalDateTime.now());
+        return ResponseEntity.created(URI.create("/videos/%s/metadata".formatted(id))).body(new VideoUploadResponse(id));
+    }
+
+    @PostMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<UUID> uploadVideo(@PathVariable UUID id, @RequestPart(name = "file") MultipartFile multipartFile, @AuthenticationPrincipal Jwt principal) {
 
         if (multipartFile.getOriginalFilename() != null && !multipartFile.getOriginalFilename().endsWith(".mp4")) {
             return ResponseEntity.badRequest().build();
         }
         //TODO after file transfer and validation file processing could be done async
-        UUID id = UUID.randomUUID();
         File file = Path.of("videos/%s.mp4".formatted(id)).toAbsolutePath().toFile();
-        log.info("file: {}", file.getAbsolutePath());
+        log.info("uploading video {}, file: {}", id, file.getAbsolutePath());
         try {
             multipartFile.transferTo(file);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        videoService.saveVideo(id, file, LocalDateTime.now(), principal.getSubject());
+        videoService.saveVideoFile(id, file, principal.getSubject());
 
         return ResponseEntity.ok().body(id);
     }

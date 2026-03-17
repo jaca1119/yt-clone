@@ -26,8 +26,8 @@ public class VideoServiceTest {
     @Test
     void shouldReturnPathToVideoFile() {
         //given
-        UUID id = UUID.randomUUID();
-        videoService.saveVideo(id, new File("test.mp4"), LocalDateTime.now(), "test");
+        UUID id = videoService.startVideoUpload("tst title", "test", LocalDateTime.now());
+        videoService.saveVideoFile(id, new File("test.mp4"), "test");
 
         //when
         Optional<Path> videoFilePath = videoService.getVideoFilePath(id);
@@ -40,8 +40,8 @@ public class VideoServiceTest {
     @Test
     void shouldReturnPathToVideoThumbnail() {
         //given
-        UUID id = UUID.randomUUID();
-        videoService.saveVideo(id, new File("test.mp4"), LocalDateTime.now(), "test");
+        UUID id = videoService.startVideoUpload("tst title", "test", LocalDateTime.now());
+        videoService.saveVideoFile(id, new File("test.mp4"), "test");
 
         //when
         Optional<Path> videoThumbnailFilePath = videoService.getVideoThumbnailFilePath(id);
@@ -52,19 +52,21 @@ public class VideoServiceTest {
     }
 
     @Test
-    void shouldSaveVideoFileAndGenerateThumbnail() {
+    void shouldSaveVideoFileFileAndGenerateThumbnail() {
         //given
-        UUID id = UUID.randomUUID();
         File file = new File("test.mp4");
         LocalDateTime uploadDatetime = LocalDateTime.now();
+        String initialTitle = "test title";
+        UUID id = videoService.startVideoUpload(initialTitle, "test", uploadDatetime);
+        videoService.saveVideoFile(id, new File("test.mp4"), "test");
         when(videoProcessor.getDuration(any())).thenReturn(Duration.ofSeconds(123));
 
         //when
-        videoService.saveVideo(id, file, uploadDatetime, "test");
+        videoService.saveVideoFile(id, file, "test");
 
         //then
         Optional<Video> video = videoService.getVideo(id);
         assertThat(video).isPresent();
-        assertThat(video.get()).isEqualTo(new Video(id, file.getName(), file.getName(), "test", 123, uploadDatetime));
+        assertThat(video.get()).isEqualTo(new Video(id, file.getName(), initialTitle, "test", 123L, uploadDatetime));
     }
 }

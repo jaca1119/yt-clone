@@ -2,6 +2,8 @@ package com.example.ytclone.infrastructure;
 
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.web.VideoUpdateDTO;
+import com.example.ytclone.infrastructure.web.VideoUploadRequest;
+import com.example.ytclone.infrastructure.web.VideoUploadResponse;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -17,11 +19,13 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -30,7 +34,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -68,7 +71,8 @@ public class VideoRestControllerTest {
 
     @BeforeEach
     void setUpTest() throws Exception {
-        videoId = uploadVideo();
+        videoId = startVideoUpload();
+        uploadVideo(videoId);
     }
 
     @AfterEach
@@ -128,6 +132,7 @@ public class VideoRestControllerTest {
     @Test
     void shouldNotUploadVideoAsUnauthenticatedUser() throws Exception {
         //given
+        UUID id = UUID.randomUUID();
         MockMultipartFile file = new MockMultipartFile("file", "file.xd", MediaType.IMAGE_JPEG_VALUE, "fake bytes".getBytes());
         assertThat(mockMvcTester.get().uri("/videos"))
                 .bodyJson()
@@ -135,8 +140,8 @@ public class VideoRestControllerTest {
                 .hasSize(5);
 
         //when
-        mockMvc.perform(multipart("/videos").file(file))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(multipart("/videos/{id}", id).file(file))
+                .andExpect(status().isUnauthorized());
 
         //then
         assertThat(mockMvcTester.get().uri("/videos"))
@@ -147,6 +152,7 @@ public class VideoRestControllerTest {
 
     @Test
     void shouldUploadVideoForUser() throws Exception {
+        String initialTitle = "test title";
         MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
         //given initial videos
         assertThat(mockMvcTester.get().uri("/videos"))
@@ -154,13 +160,16 @@ public class VideoRestControllerTest {
                 .convertTo(InstanceOfAssertFactories.LIST)
                 .hasSize(5);
 
-        //when upload file
-        String contentId = mockMvc.perform(multipart("/videos").file(file).with(jwt()))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        String id = contentId.substring(1, contentId.lastIndexOf("\""));
+        //when start video upload
+        VideoUploadResponse videoUploadResponse = objectMapper.readValue(mockMvcTester.post().uri("/videos")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new VideoUploadRequest(initialTitle)))
+                .exchange().getResponse().getContentAsString(), VideoUploadResponse.class);
 
-        assertThatCode(() -> UUID.fromString(id)).doesNotThrowAnyException();
+        //when upload file
+        mockMvc.perform(multipart("/videos/{id}", videoUploadResponse.videoId()).file(file).with(jwt()))
+                .andExpect(status().isOk());
 
         //then expect videos + 1
         assertThat(mockMvcTester.get().uri("/videos"))
@@ -168,16 +177,17 @@ public class VideoRestControllerTest {
                 .convertTo(InstanceOfAssertFactories.LIST)
                 .hasSize(6);
 
-        mockMvcTester.get().uri("/videos/{id}/metadata", id)
+        mockMvcTester.get().uri("/videos/{id}/metadata", videoUploadResponse.videoId())
                 .assertThat()
                 .bodyJson()
                 .convertTo(Video.class)
                 .satisfies(video -> {
                     assertThat(video.getCreator()).isEqualTo("user");
+                    assertThat(video.getTitle()).isEqualTo(initialTitle);
                 });
 
         //cleanup
-        deleteVideo(UUID.fromString(id));
+        deleteVideo(videoUploadResponse.videoId());
     }
 
     @Test
@@ -185,8 +195,12 @@ public class VideoRestControllerTest {
         String jwtTokenAlgNone = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.";
         MockMultipartFile file = new MockMultipartFile("file", "file.xd", MediaType.IMAGE_JPEG_VALUE, "fake bytes".getBytes());
 
-        mockMvc.perform(multipart("/videos").file(file).header("Authorization", "Bearer " + jwtTokenAlgNone))
+        UUID id = UUID.randomUUID();
+        mockMvc.perform(multipart("/videos/{id}", id).file(file).header("Authorization", "Bearer " + jwtTokenAlgNone))
                 .andExpect(status().isUnauthorized());
+
+        //ugly hack. Test is too fast and thumbnail isn't generated before deleting. This ensures it will be deleted and not trash dev file system
+        Thread.sleep(100);
     }
 
     @Test
@@ -246,7 +260,8 @@ public class VideoRestControllerTest {
     @Test
     void shouldDeleteUserVideo() throws Exception {
         //given
-        UUID id = uploadVideo();
+        UUID id = startVideoUpload();
+        uploadVideo(id);
 
         //when
         mockMvcTester.delete().uri("/videos/{id}", id)
@@ -280,13 +295,39 @@ public class VideoRestControllerTest {
                 .hasStatusOk();
     }
 
-    UUID uploadVideo() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
-        String contentId = mockMvc.perform(multipart("/videos").file(file).with(jwt()))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-        return UUID.fromString(contentId.substring(1, contentId.lastIndexOf("\"")));
+    @Test
+    void shouldCreateVideoUpload() throws UnsupportedEncodingException {
+        MvcTestResult result = mockMvcTester.post().uri("/videos")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new VideoUploadRequest("title")))
+                .exchange();
 
+        assertThat(result)
+                .hasStatus(HttpStatus.CREATED)
+                .bodyJson()
+                .convertTo(VideoUploadResponse.class)
+                .satisfies(videoUploadResponse -> {
+                    assertThat(videoUploadResponse.videoId()).isNotNull();
+                });
+
+        //cleanup
+        deleteVideo(objectMapper.readValue(result.getResponse().getContentAsString(), VideoUploadResponse.class).videoId());
+    }
+
+    UUID startVideoUpload() throws UnsupportedEncodingException {
+        VideoUploadResponse videoUploadResponse = objectMapper.readValue(mockMvcTester.post().uri("/videos")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new VideoUploadRequest("test title")))
+                .exchange().getResponse().getContentAsString(), VideoUploadResponse.class);
+        return videoUploadResponse.videoId();
+    }
+
+    void uploadVideo(UUID id) throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
+        mockMvc.perform(multipart("/videos/{id}", id).file(file).with(jwt()))
+                .andExpect(status().isOk());
     }
 
     void deleteVideo(UUID id) {

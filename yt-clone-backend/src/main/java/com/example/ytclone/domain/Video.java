@@ -13,6 +13,6 @@ public class Video {
     private String filename;
     private String title;
     private String creator;
-    private long length;
+    private Long length;
     private LocalDateTime uploadDate;
 }

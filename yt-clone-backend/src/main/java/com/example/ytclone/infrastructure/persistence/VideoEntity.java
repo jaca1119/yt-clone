@@ -22,6 +22,6 @@ public class VideoEntity {
     private String title;
     @Column(nullable = false, updatable = false)
     private String createdBy;
-    private long length;
+    private Long length;
     private LocalDateTime uploadDate;
 }

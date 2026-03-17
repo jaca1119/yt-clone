@@ -14,7 +14,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-public class  InMemoryVideoRepository implements VideoRepository {
+public class InMemoryVideoRepository implements VideoRepository {
     ConcurrentHashMap<UUID, VideoEntity> videos = new ConcurrentHashMap<>();
 
     @Override
@@ -99,8 +99,12 @@ public class  InMemoryVideoRepository implements VideoRepository {
 
     @Override
     public <S extends VideoEntity> S save(S entity) {
-         videos.put(entity.getId(), entity);
-         return entity;
+        videos.merge(entity.getId(), entity, (videoEntity, videoEntity2) -> {
+            videoEntity.setLength(videoEntity2.getLength());
+            videoEntity.setFilename(videoEntity2.getFilename());
+            return videoEntity;
+        });
+        return entity;
     }
 
     @Override
@@ -170,6 +174,11 @@ public class  InMemoryVideoRepository implements VideoRepository {
 
     @Override
     public Optional<VideoEntity> findByIdAndCreatedBy(UUID id, String user) {
+        VideoEntity videoEntity = videos.get(id);
+        if (videoEntity != null && videoEntity.getCreatedBy().equals(user)) {
+            return Optional.of(videoEntity);
+        }
+
         return Optional.empty();
     }
 }

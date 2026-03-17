@@ -1,28 +1,24 @@
 package com.example.ytclone.infrastructure;
 
-import com.example.ytclone.application.VideoService;
-import com.example.ytclone.infrastructure.persistence.VideoRepository;
-import com.example.ytclone.infrastructure.web.VideoRestController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(VideoRestController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class AuthTests {
     @Autowired
     MockMvc mvc;
-
-    @MockitoBean
-    VideoService videoService;
-    @MockitoBean
-    VideoRepository videoRepository;
 
     @Test
     void shouldGet401WhenCallingEndpointThatIsProtected() throws Exception {
@@ -34,5 +30,14 @@ public class AuthTests {
     void shouldCallAuthenticatedEndpointAndGetResponse() throws Exception {
         mvc.perform(post("/test").with(jwt()))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldNotAuthorizeWhenNotValidJwtAlgNone() throws Exception {
+        String jwtTokenAlgNone = "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.";
+        MockMultipartFile file = new MockMultipartFile("file", "file.xd", MediaType.IMAGE_JPEG_VALUE, "fake bytes".getBytes());
+
+        mvc.perform(multipart("/videos/{id}", UUID.randomUUID()).file(file).header("Authorization", "Bearer " + jwtTokenAlgNone))
+                .andExpect(status().isUnauthorized());
     }
 }
