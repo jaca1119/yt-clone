@@ -38,8 +38,12 @@ public class YtCloneApplication implements CommandLineRunner {
 
     @Override
     public void run(String @NonNull ... args) throws Exception {
+        Path videosDir = Path.of("videos");
+        Files.createDirectories(videosDir);
+        Files.createDirectories(Path.of("videos/thumbnails"));
+
         //Load initial data from videos directory in the project
-        try (Stream<Path> pathStream = Files.list(Path.of("videos"))) {
+        try (Stream<Path> pathStream = Files.list(videosDir)) {
             List<VideoEntity> videos = pathStream.filter(file -> file.getFileName().toString().endsWith(".mp4"))
                     .map(file -> {
                         ProcessBuilder processBuilder = new ProcessBuilder("ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", file.toAbsolutePath().toString());
