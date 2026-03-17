@@ -3,7 +3,9 @@ package com.example.ytclone.infrastructure;
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.web.VideoUpdateDTO;
 import org.assertj.core.api.InstanceOfAssertFactories;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -50,6 +52,7 @@ public class VideoRestControllerTest {
     ObjectMapper objectMapper;
 
     static File testUploadFile;
+    UUID videoId;
 
     @BeforeAll
     static void setUp() throws IOException, InterruptedException {
@@ -63,6 +66,16 @@ public class VideoRestControllerTest {
         testUploadFile = new File("videos/tests/smpte.mp4");
     }
 
+    @BeforeEach
+    void setUpTest() throws Exception {
+        videoId = uploadVideo();
+    }
+
+    @AfterEach
+    void cleanupTest() {
+        deleteVideo(videoId);
+    }
+
     @Test
     void shouldGetAllVideos() {
         restTestClient.get().uri("/videos")
@@ -72,21 +85,13 @@ public class VideoRestControllerTest {
                 .expectBody(new ParameterizedTypeReference<List<Video>>() {
                 })
                 .value(videos ->
-                        assertThat(videos).hasSizeGreaterThanOrEqualTo(4)
+                        assertThat(videos).hasSize(5)
                 );
     }
 
     @Test
     void shouldGetVideoMetadata() {
-        List<Video> videos = restTestClient.get().uri("/videos")
-                .exchange()
-                .expectStatus()
-                .isOk()
-                .expectBody(new ParameterizedTypeReference<List<Video>>() {
-                }).returnResult().getResponseBody();
-        assertThat(videos).hasSizeGreaterThanOrEqualTo(4);
-
-        restTestClient.get().uri("/videos/{id}/metadata", videos.getFirst().getId())
+        restTestClient.get().uri("/videos/{id}/metadata", videoId)
                 .exchange()
                 .expectStatus()
                 .isOk()
@@ -103,15 +108,7 @@ public class VideoRestControllerTest {
      */
     @Test
     void shouldStreamVideoWithRange() {
-        List<Video> videos = restTestClient.get().uri("/videos")
-                .exchange()
-                .expectStatus()
-                .isOk()
-                .expectBody(new ParameterizedTypeReference<List<Video>>() {
-                }).returnResult().getResponseBody();
-        assertThat(videos).hasSizeGreaterThanOrEqualTo(4);
-
-        restTestClient.get().uri("/videos/{id}", videos.getFirst().getId())
+        restTestClient.get().uri("/videos/{id}", videoId)
                 .header("Range", "bytes=0-999") //get 1000 bytes, browser send 'bytes=0-' which sends full file but browser stop reading so server stop sending more
                 .exchange()
                 .expectStatus()
@@ -130,52 +127,57 @@ public class VideoRestControllerTest {
 
     @Test
     void shouldNotUploadVideoAsUnauthenticatedUser() throws Exception {
+        //given
         MockMultipartFile file = new MockMultipartFile("file", "file.xd", MediaType.IMAGE_JPEG_VALUE, "fake bytes".getBytes());
+        assertThat(mockMvcTester.get().uri("/videos"))
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.LIST)
+                .hasSize(5);
+
+        //when
         mockMvc.perform(multipart("/videos").file(file))
                 .andExpect(status().isForbidden());
+
+        //then
+        assertThat(mockMvcTester.get().uri("/videos"))
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.LIST)
+                .hasSize(5);
     }
 
     @Test
     void shouldUploadVideoForUser() throws Exception {
-        String videoId = null;
-        try {
-            MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
-            //given 4 initial videos
-            assertThat(mockMvcTester.get().uri("/videos"))
-                    .bodyJson()
-                    .convertTo(InstanceOfAssertFactories.LIST)
-                    .hasSizeGreaterThanOrEqualTo(1);
+        MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
+        //given initial videos
+        assertThat(mockMvcTester.get().uri("/videos"))
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.LIST)
+                .hasSize(5);
 
-            //when upload file
-            String contentId = mockMvc.perform(multipart("/videos").file(file).with(jwt()))
-                    .andExpect(status().isOk())
-                    .andReturn().getResponse().getContentAsString();
-            String id = contentId.substring(1, contentId.lastIndexOf("\""));
-            videoId = id;
+        //when upload file
+        String contentId = mockMvc.perform(multipart("/videos").file(file).with(jwt()))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String id = contentId.substring(1, contentId.lastIndexOf("\""));
 
-            assertThatCode(() -> UUID.fromString(id)).doesNotThrowAnyException();
+        assertThatCode(() -> UUID.fromString(id)).doesNotThrowAnyException();
 
-            //then expect 5 videos
-            assertThat(mockMvcTester.get().uri("/videos"))
-                    .bodyJson()
-                    .convertTo(InstanceOfAssertFactories.LIST)
-                    .hasSizeGreaterThanOrEqualTo(2);
+        //then expect videos + 1
+        assertThat(mockMvcTester.get().uri("/videos"))
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.LIST)
+                .hasSize(6);
 
-            mockMvcTester.get().uri("/videos/{id}/metadata", id)
-                    .assertThat()
-                    .bodyJson()
-                    .convertTo(Video.class)
-                    .satisfies(video -> {
-                        assertThat(video.getCreator()).isEqualTo("user");
-                    });
+        mockMvcTester.get().uri("/videos/{id}/metadata", id)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> {
+                    assertThat(video.getCreator()).isEqualTo("user");
+                });
 
-        } finally {
-            if (videoId != null) {
-                //cleanup delete created files
-                Files.deleteIfExists(Path.of("videos/%s.mp4".formatted(videoId)));
-                Files.deleteIfExists(Path.of("videos/thumbnails/%s.jpg".formatted(videoId)));
-            }
-        }
+        //cleanup
+        deleteVideo(UUID.fromString(id));
     }
 
     @Test
@@ -188,83 +190,57 @@ public class VideoRestControllerTest {
     }
 
     @Test
-    void shouldUpdateVideoTitle() throws IOException {
-        UUID id = null;
-        try {
-            id = uploadVideo();
+    void shouldUpdateVideoTitle() throws Exception {
+        //given
+        String newTitle = "new Title";
+        Video videoBeforeUpdate = restTestClient.get().uri("/videos/{id}/metadata", videoId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Video.class)
+                .returnResult().getResponseBody();
 
-            Video videoBeforeUpdate = restTestClient.get().uri("/videos/{id}/metadata", id)
-                    .exchange()
-                    .expectStatus().isOk()
-                    .expectBody(Video.class)
-                    .returnResult().getResponseBody();
+        //when
+        mockMvc.perform(put("/videos/{id}", videoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new VideoUpdateDTO(Optional.of(newTitle))))
+                        .with(jwt()))
+                .andExpect(status().isNoContent());
 
+        Video videoAfterUpdate = restTestClient.get().uri("/videos/{id}/metadata", videoId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Video.class)
+                .returnResult().getResponseBody();
 
-            String newTitle = "new Title";
-            mockMvc.perform(put("/videos/{id}", id)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new VideoUpdateDTO(Optional.of(newTitle))))
-                            .with(jwt()))
-                    .andExpect(status().isNoContent());
-
-            Video videoAfterUpdate = restTestClient.get().uri("/videos/{id}/metadata", id)
-                    .exchange()
-                    .expectStatus().isOk()
-                    .expectBody(Video.class)
-                    .returnResult().getResponseBody();
-
-            assertThat(videoBeforeUpdate.getTitle()).isNotEqualTo(videoAfterUpdate.getTitle());
-            assertThat(videoAfterUpdate.getTitle()).isEqualTo(newTitle);
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (id != null) {
-                //cleanup delete created files
-                Files.deleteIfExists(Path.of("videos/%s.mp4".formatted(id)));
-                Files.deleteIfExists(Path.of("videos/thumbnails/%s.jpg".formatted(id)));
-            }
-        }
+        assertThat(videoBeforeUpdate.getTitle()).isNotEqualTo(videoAfterUpdate.getTitle());
+        assertThat(videoAfterUpdate.getTitle()).isEqualTo(newTitle);
     }
 
     @Test
-    void shouldNotUpdateVideoTitleOfDifferentUser() throws IOException {
-        UUID id = null;
-        try {
-            id = uploadVideo();
+    void shouldNotUpdateVideoTitleOfDifferentUser() throws Exception {
 
-            Video videoBeforeUpdate = restTestClient.get().uri("/videos/{id}/metadata", id)
-                    .exchange()
-                    .expectStatus().isOk()
-                    .expectBody(Video.class)
-                    .returnResult().getResponseBody();
+        Video videoBeforeUpdate = restTestClient.get().uri("/videos/{id}/metadata", videoId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Video.class)
+                .returnResult().getResponseBody();
 
 
-            String newTitle = "new Title";
-            String differentUser = "different user";
-            mockMvc.perform(put("/videos/{id}", id)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(new VideoUpdateDTO(Optional.of(newTitle))))
-                            .with(jwt().jwt((jwt) -> jwt.subject(differentUser))))
-                    .andExpect(status().isNotFound());
+        String newTitle = "new Title";
+        String differentUser = "different user";
+        mockMvc.perform(put("/videos/{id}", videoId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new VideoUpdateDTO(Optional.of(newTitle))))
+                        .with(jwt().jwt((jwt) -> jwt.subject(differentUser))))
+                .andExpect(status().isNotFound());
 
-            Video videoAfterUpdate = restTestClient.get().uri("/videos/{id}/metadata", id)
-                    .exchange()
-                    .expectStatus().isOk()
-                    .expectBody(Video.class)
-                    .returnResult().getResponseBody();
+        Video videoAfterUpdate = restTestClient.get().uri("/videos/{id}/metadata", videoId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Video.class)
+                .returnResult().getResponseBody();
 
-            assertThat(videoBeforeUpdate.getTitle()).isEqualTo(videoAfterUpdate.getTitle());
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            if (id != null) {
-                //cleanup delete created files
-                Files.deleteIfExists(Path.of("videos/%s.mp4".formatted(id)));
-                Files.deleteIfExists(Path.of("videos/thumbnails/%s.jpg".formatted(id)));
-            }
-        }
+        assertThat(videoBeforeUpdate.getTitle()).isEqualTo(videoAfterUpdate.getTitle());
     }
 
     @Test
@@ -289,28 +265,19 @@ public class VideoRestControllerTest {
 
     @Test
     void shouldNotDeleteVideoOfDifferentUser() throws Exception {
-        //given
-        UUID id = uploadVideo();
-
         //when
-        mockMvcTester.delete().uri("/videos/{id}", id)
+        mockMvcTester.delete().uri("/videos/{id}", videoId)
                 .with(jwt().jwt(jwt -> jwt.subject("different user")))
                 .assertThat()
                 .hasStatus(HttpStatus.NOT_FOUND);
 
         //then
-        mockMvcTester.get().uri("/videos/{id}/metadata", id)
+        mockMvcTester.get().uri("/videos/{id}/metadata", videoId)
                 .assertThat()
                 .hasStatusOk();
-        mockMvcTester.get().uri("/videos/{id}", id)
+        mockMvcTester.get().uri("/videos/{id}", videoId)
                 .assertThat()
                 .hasStatusOk();
-
-        //cleanup
-        mockMvcTester.delete().uri("/videos/{id}", id)
-                .with(jwt())
-                .assertThat()
-                .hasStatus(HttpStatus.NO_CONTENT);
     }
 
     UUID uploadVideo() throws Exception {
@@ -320,5 +287,12 @@ public class VideoRestControllerTest {
                 .andReturn().getResponse().getContentAsString();
         return UUID.fromString(contentId.substring(1, contentId.lastIndexOf("\"")));
 
+    }
+
+    void deleteVideo(UUID id) {
+        mockMvcTester.delete().uri("/videos/{id}", id)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.NO_CONTENT);
     }
 }

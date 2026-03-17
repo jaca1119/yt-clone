@@ -53,10 +53,14 @@ public class VideoService {
     }
 
     public void saveVideo(UUID id, File file, LocalDateTime uploadDateTime, String creator) {
-        Duration duration = videoProcessor.getDuration(file);
-        videoProcessor.generateThumbnail(file, "%s.jpg".formatted(id));
-
-        videoRepository.save(new VideoEntity(id, file.getName(), file.getName(), creator, duration.getSeconds(), uploadDateTime));
+        try {
+            Duration duration = videoProcessor.getDuration(file);
+            videoProcessor.generateThumbnail(file, "%s.jpg".formatted(id));
+            videoRepository.save(new VideoEntity(id, file.getName(), file.getName(), creator, duration.getSeconds(), uploadDateTime));
+        } catch (RuntimeException e) {
+            file.delete();
+            throw e;
+        }
     }
 
     private Video toVideo(VideoEntity videoEntity) {
@@ -77,6 +81,7 @@ public class VideoService {
 
     @Transactional
     public void deleteVideo(UUID id, String user) {
+        log.info("Deleting video: {}, user: {}", id, user);
         videoRepository.findByIdAndCreatedBy(id, user)
                 .ifPresentOrElse(
                         entity -> {
@@ -90,11 +95,21 @@ public class VideoService {
                                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
                             }
 
+                            log.info("Deleting {}, {}", videoFile, thumbnail);
                             videoRepository.delete(entity);
-                            if (Files.isRegularFile(videoFile) && Files.isRegularFile(thumbnail)) {
+                            if (Files.isRegularFile(videoFile)) {
                                 try {
                                     Files.deleteIfExists(videoFile);
+                                    log.info("Deleted video {}", id);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+
+                            if (Files.isRegularFile(thumbnail)) {
+                                try {
                                     Files.deleteIfExists(thumbnail);
+                                    log.info("Deleted thumbnail {}", id);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }
