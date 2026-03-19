@@ -315,13 +315,37 @@ public class VideoRestControllerTest {
         deleteVideo(objectMapper.readValue(result.getResponse().getContentAsString(), VideoUploadResponse.class).videoId());
     }
 
-    UUID startVideoUpload() throws UnsupportedEncodingException {
-        VideoUploadResponse videoUploadResponse = objectMapper.readValue(mockMvcTester.post().uri("/videos")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new VideoUploadRequest("test title")))
-                .exchange().getResponse().getContentAsString(), VideoUploadResponse.class);
-        return videoUploadResponse.videoId();
+    @Test
+    void shouldNotShowStartedButNotUploadedYetVideo() {
+        UUID id = startVideoUpload();
+
+        restTestClient.get().uri("/videos")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(new ParameterizedTypeReference<List<Video>>() {
+                })
+                .value(videos -> {
+                            assertThat(videos).hasSize(5);
+                            assertThat(videos).extracting(Video::getId).doesNotContain(id);
+                        }
+                );
+
+        //cleanup
+        deleteVideo(id);
+    }
+
+    UUID startVideoUpload() {
+        try {
+            VideoUploadResponse videoUploadResponse = objectMapper.readValue(mockMvcTester.post().uri("/videos")
+                    .with(jwt())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(new VideoUploadRequest("test title")))
+                    .exchange().getResponse().getContentAsString(), VideoUploadResponse.class);
+            return videoUploadResponse.videoId();
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     void uploadVideo(UUID id) throws Exception {

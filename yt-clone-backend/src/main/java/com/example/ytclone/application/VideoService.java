@@ -39,7 +39,7 @@ public class VideoService {
     }
 
     public List<Video> getVideos() {
-        return videoRepository.findAll().stream().map(this::toVideo).toList();
+        return videoRepository.findAllByFilenameIsNotNull().stream().map(this::toVideo).toList();
     }
 
     public Optional<Path> getVideoFilePath(UUID id) {

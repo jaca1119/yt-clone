@@ -181,4 +181,9 @@ public class InMemoryVideoRepository implements VideoRepository {
 
         return Optional.empty();
     }
+
+    @Override
+    public List<VideoEntity> findAllByFilenameIsNotNull() {
+        return List.of();
+    }
 }
