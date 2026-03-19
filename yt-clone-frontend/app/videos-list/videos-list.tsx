@@ -37,7 +37,10 @@ export function VideosList({
             >
               <div className="w-105">
                 <div className="relative">
-                  <img src={`http://localhost:8080/videos/${id}/thumbnail`} />
+                  <img
+                    className="m-auto"
+                    src={`http://localhost:8080/videos/${id}/thumbnail`}
+                  />
                   <span className="p-1 bg-black text-white rounded-xl absolute right-1 bottom-1">
                     {length >= 3600
                       ? `${Math.floor(length / 3600)}:${Math.floor(
