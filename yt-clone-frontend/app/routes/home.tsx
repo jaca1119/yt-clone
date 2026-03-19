@@ -1,5 +1,6 @@
 import type { Route } from "./+types/home";
 import { VideosList } from "../videos-list/videos-list";
+import { getAllVideos } from "~/scripts/api";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -8,28 +9,8 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export interface Video {
-  id: string;
-  title: string;
-  length: number;
-  uploadDate: string;
-  creator: string;
-}
-
 export async function clientLoader() {
-  try {
-    const res = await fetch("http://localhost:8080/videos");
-    return (await res.json()) as Video[];
-  } catch {
-    return [
-      {
-        id: "1",
-        title: "title",
-        length: 12,
-        uploadDate: new Date().toISOString(),
-      },
-    ] as Video[];
-  }
+  return await getAllVideos();
 }
 
 export function HydrateFallback() {

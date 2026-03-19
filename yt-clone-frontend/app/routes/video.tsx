@@ -1,9 +1,9 @@
 import { useLocation } from "react-router";
 import type { Route } from "./+types/video";
-import dayjs from "dayjs";
 import LocalizedFormat from "dayjs/plugin/localizedFormat";
 import { useEffect, useState } from "react";
-import type { Video } from "./home";
+import { getVideoMetadata, type Video } from "~/scripts/api";
+import dayjs from "dayjs";
 dayjs.extend(LocalizedFormat);
 
 export default function Video({ params }: Route.ComponentProps) {
@@ -13,10 +13,7 @@ export default function Video({ params }: Route.ComponentProps) {
 
   useEffect(() => {
     async function fetchVideoMetadata() {
-      const res = await fetch(
-        `http://localhost:8080/videos/${params.id}/metadata`,
-      );
-      const data = await res.json();
+      const data = await getVideoMetadata(params.id);
       setVideo(data);
     }
 

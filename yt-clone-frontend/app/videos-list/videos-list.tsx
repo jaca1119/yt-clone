@@ -1,6 +1,5 @@
 import { Link } from "react-router";
-import type { Video } from "~/routes/home";
-import { redirectToOauth2Authorization } from "~/scripts/auth";
+import type { Video } from "~/scripts/api";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
 dayjs.extend(RelativeTime);

@@ -3,26 +3,16 @@ import { useState } from "react";
 import { getAccessToken } from "~/scripts/auth";
 import type { Route } from "./+types/upload";
 import { useFetcher } from "react-router";
-
-interface UploadVideoResponse {
-  videoId: string;
-}
+import { startVideoUpload, updateVideo, uploadVideo } from "~/scripts/api";
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
   const title = formData.get("title") || "";
   const videoId = formData.get("videoId");
-  await axios.put(
-    `http://localhost:8080/videos/${videoId}`,
-    {
-      title: title,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${getAccessToken()}`,
-      },
-    },
-  );
+
+  if (videoId) {
+    updateVideo(videoId as string, title as string);
+  }
 
   return { ok: true };
 }
@@ -39,34 +29,16 @@ export default function Upload() {
       const file = e.target.files[0];
       setTitle(file.name);
 
-      const res = await axios.post<UploadVideoResponse>(
-        "http://localhost:8080/videos",
-        {
-          title: file.name,
-        },
-        {
-          headers: {
-            Authorization: "Bearer " + getAccessToken(),
-          },
-        },
-      );
-      setVideoId(res.data.videoId);
+      const res = await startVideoUpload(file.name);
+      setVideoId(res.videoId);
 
       const formData = new FormData();
       formData.append("file", file);
 
-      axios.post(`http://localhost:8080/videos/${res.data.videoId}`, formData, {
-        headers: {
-          Authorization: `Bearer ${getAccessToken()}`,
-          "Content-Type": "multipart/form-data",
-        },
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.total) {
-            setPercentOfUpload(
-              Math.round((progressEvent.loaded * 100) / progressEvent.total),
-            );
-          }
-        },
+      uploadVideo(res.videoId, file, (loaded, total) => {
+        if (total) {
+          setPercentOfUpload(Math.round((loaded * 100) / total));
+        }
       });
     }
   };
