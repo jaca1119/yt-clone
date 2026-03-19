@@ -61,11 +61,7 @@ export async function uploadVideo(
       "Content-Type": "multipart/form-data",
     },
     onUploadProgress: (progressEvent) => {
-      // if (progressEvent.total) {
       onProgress(progressEvent.loaded, progressEvent.total);
-      // setPercentOfUpload(
-      //   Math.round((progressEvent.loaded * 100) / progressEvent.total),
-      // );
     },
   });
 }
