@@ -2,6 +2,7 @@ import { Link } from "react-router";
 import type { Video } from "~/scripts/api";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
+import Thumbnail from "./thumbnail";
 dayjs.extend(RelativeTime);
 
 export function VideosList({
@@ -35,24 +36,7 @@ export function VideosList({
               }}
             >
               <div className="w-105">
-                <div className="relative">
-                  <img
-                    className="m-auto"
-                    src={`http://localhost:8080/videos/${id}/thumbnail`}
-                  />
-                  <span className="p-1 bg-black text-white rounded-xl absolute right-1 bottom-1">
-                    {length >= 3600
-                      ? `${Math.floor(length / 3600)}:${Math.floor(
-                          (length % 3600) / 60,
-                        )
-                          .toString()
-                          .padStart(
-                            2,
-                            "0",
-                          )}:${(length % 60).toString().padStart(2, "0")}`
-                      : `${Math.floor(length / 60)}:${(length % 60).toString().padStart(2, "0")}`}
-                  </span>
-                </div>
+                <Thumbnail videoId={id} length={length}></Thumbnail>
                 <div>{title}</div>
                 <div>{dayjs(uploadDate).fromNow()}</div>
                 <div>Uploaded by: {creator} </div>

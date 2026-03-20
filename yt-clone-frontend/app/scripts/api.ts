@@ -70,3 +70,21 @@ export async function getVideoMetadata(videoId: string) {
   const res = await fetch(`http://localhost:8080/videos/${videoId}/metadata`);
   return (await res.json()) as Video;
 }
+
+export async function getAllVideosForUser() {
+  const res = await axios.get<Video[]>("http://localhost:8080/videos/by-user", {
+    headers: {
+      Authorization: "Bearer " + getAccessToken(),
+    },
+  });
+
+  return res.data;
+}
+
+export async function deleteVideo(videoId: string) {
+  return axios.delete(`http://localhost:8080/videos/${videoId}`, {
+    headers: {
+      Authorization: "Bearer " + getAccessToken(),
+    },
+  });
+}

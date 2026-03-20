@@ -65,6 +65,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     >
                       Logout
                     </button>
+                    <Link className="ml-3" to="/upload">
+                      Upload
+                    </Link>
+                    <Link className="ml-3" to="/manage">
+                      Manage
+                    </Link>
                   </>
                 ) : (
                   <button
@@ -74,9 +80,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     Login
                   </button>
                 )}
-                <Link className="ml-3" to="/upload">
-                  Upload
-                </Link>
               </div>
             </div>
             {children}
