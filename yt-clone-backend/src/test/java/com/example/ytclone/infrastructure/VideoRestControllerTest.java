@@ -335,10 +335,64 @@ public class VideoRestControllerTest {
         deleteVideo(id);
     }
 
+    @Test
+    void shouldGetAllVideosUploadedByUser() {
+        String differentUser = "different user";
+
+        //given all videos
+        restTestClient.get().uri("/videos")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(new ParameterizedTypeReference<List<Video>>() {
+                })
+                .value(videos ->
+                        assertThat(videos).hasSize(5)
+                );
+
+        //when upload video by different user
+        UUID id = startVideoUpload(differentUser);
+        uploadVideo(id, differentUser);
+
+        //then default user should have 1 video
+        mockMvcTester.get().uri("/videos/by-user")
+                .with(jwt())
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.LIST)
+                .hasSize(1);
+
+        //different user should have 1 video
+        mockMvcTester.get().uri("/videos/by-user")
+                .with(jwt().jwt(jwt -> jwt.subject(differentUser)))
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.LIST)
+                .hasSize(1);
+
+        //all videos should be initial + 1
+        restTestClient.get().uri("/videos")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(new ParameterizedTypeReference<List<Video>>() {
+                })
+                .value(videos ->
+                        assertThat(videos).hasSize(6)
+                );
+
+        //cleanup
+        deleteVideo(id, differentUser);
+    }
+
     UUID startVideoUpload() {
+        return startVideoUpload("user");
+    }
+
+    UUID startVideoUpload(String user) {
         try {
             VideoUploadResponse videoUploadResponse = objectMapper.readValue(mockMvcTester.post().uri("/videos")
-                    .with(jwt())
+                    .with(jwt().jwt(jwt -> jwt.subject(user)))
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(new VideoUploadRequest("test title")))
                     .exchange().getResponse().getContentAsString(), VideoUploadResponse.class);
@@ -348,15 +402,27 @@ public class VideoRestControllerTest {
         }
     }
 
-    void uploadVideo(UUID id) throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
-        mockMvc.perform(multipart("/videos/{id}", id).file(file).with(jwt()))
-                .andExpect(status().isOk());
+    void uploadVideo(UUID id) {
+        uploadVideo(id, "user");
+    }
+
+    void uploadVideo(UUID id, String user) {
+        try {
+            MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
+            mockMvc.perform(multipart("/videos/{id}", id).file(file).with(jwt().jwt(jwt -> jwt.subject(user))))
+                    .andExpect(status().isOk());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     void deleteVideo(UUID id) {
+        deleteVideo(id, "user");
+    }
+
+    void deleteVideo(UUID id, String user) {
         mockMvcTester.delete().uri("/videos/{id}", id)
-                .with(jwt())
+                .with(jwt().jwt(jwt -> jwt.subject(user)))
                 .assertThat()
                 .hasStatus(HttpStatus.NO_CONTENT);
     }

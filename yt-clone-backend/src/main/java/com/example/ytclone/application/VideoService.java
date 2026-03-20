@@ -42,6 +42,10 @@ public class VideoService {
         return videoRepository.findAllByFilenameIsNotNull().stream().map(this::toVideo).toList();
     }
 
+    public List<Video> getVideos(String user) {
+        return videoRepository.findAllByCreatedBy(user).stream().map(this::toVideo).toList();
+    }
+
     public Optional<Path> getVideoFilePath(UUID id) {
         return videoRepository.findById(id)
                 .map(video -> Path.of("videos/%s".formatted(video.getFilename())).toAbsolutePath());

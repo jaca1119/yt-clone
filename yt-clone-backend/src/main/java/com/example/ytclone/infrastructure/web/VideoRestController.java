@@ -38,6 +38,12 @@ public class VideoRestController {
         return videoService.getVideos();
     }
 
+    @GetMapping("/by-user")
+    public List<Video> getVideosByUser(@AuthenticationPrincipal Jwt jwt) {
+        log.info("Finding videos by user {}", jwt.getSubject());
+        return videoService.getVideos(jwt.getSubject());
+    }
+
     //Spring handles range automatically
     @GetMapping("/{id}")
     public ResponseEntity<Resource> streamVideo(@PathVariable UUID id) {
@@ -75,7 +81,7 @@ public class VideoRestController {
         }
         //TODO after file transfer and validation file processing could be done async
         File file = Path.of("videos/%s.mp4".formatted(id)).toAbsolutePath().toFile();
-        log.info("uploading video {}, file: {}", id, file.getAbsolutePath());
+        log.info("uploading video {}, file: {}, by user: {}", id, file.getAbsolutePath(), principal.getSubject());
         try {
             multipartFile.transferTo(file);
         } catch (IOException e) {
