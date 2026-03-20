@@ -2,6 +2,7 @@ import { deleteVideo, getAllVideosForUser } from "~/scripts/api";
 import type { Route } from "./+types/manage";
 import Thumbnail from "~/videos-list/thumbnail";
 import { useFetcher } from "react-router";
+import { Link } from "react-router";
 
 export async function clientLoader() {
   return getAllVideosForUser();
@@ -36,6 +37,8 @@ export default function Manage({ loaderData }: Route.ComponentProps) {
               <input type="hidden" name="videoId" value={v.id}></input>
               <button type="submit">Delete</button>
             </fetcher.Form>
+
+            <Link to={`videos/${v.id}/edit`}>Edit</Link>
           </div>
         ))}
       </div>

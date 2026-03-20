@@ -6,4 +6,5 @@ export default [
   route("callback", "routes/callback.tsx"),
   route("upload", "routes/upload.tsx"),
   route("manage", "routes/manage.tsx"),
+  route("manage/videos/:videoId/edit", "routes/video-edit.tsx"),
 ] satisfies RouteConfig;
