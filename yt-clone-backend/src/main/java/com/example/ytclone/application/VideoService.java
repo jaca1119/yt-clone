@@ -77,6 +77,7 @@ public class VideoService {
                         throw e;
                     }
                 }, () -> {
+                    file.delete();
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND);
                 });
     }
