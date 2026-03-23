@@ -1,5 +1,6 @@
 package com.example.ytclone.infrastructure;
 
+import com.example.ytclone.TestcontainersConfiguration;
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.web.VideoUpdateDTO;
 import com.example.ytclone.infrastructure.web.VideoUploadRequest;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,6 +42,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
+@Import(TestcontainersConfiguration.class)
 //mock server, when resttestclient then security is omitted but when used with mockmvc then it test also security layer
 @SpringBootTest
 @AutoConfigureRestTestClient

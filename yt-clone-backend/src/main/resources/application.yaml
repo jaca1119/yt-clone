@@ -2,14 +2,16 @@ spring:
   application:
     name: yt-clone
   datasource:
-    url: jdbc:h2:~/yt-clone/db
+    url: jdbc:postgresql://localhost:5432/yt_clone
+    username: postgres
+    password: pass
   jpa:
     hibernate:
-      ddl-auto: create-drop
-#   show-sql: true
-#   properties:
-#     hibernate:
-#       format_sql: true
+      ddl-auto: update
+  show-sql: true
+  properties:
+    hibernate:
+      format_sql: true
 
 #TODO set file size limits, and set threshold so spring will copy file instead of handling it in memory
 #logging:
