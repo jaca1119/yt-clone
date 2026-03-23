@@ -12,15 +12,14 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,9 +37,54 @@ public class YtCloneApplication implements CommandLineRunner {
 
     @Override
     public void run(String @NonNull ... args) throws Exception {
+        //setup initial dirs
         Path videosDir = Path.of("videos");
         Files.createDirectories(videosDir);
         Files.createDirectories(Path.of("videos/thumbnails"));
+
+        //generate videos if argument provided
+        log.info("Program arguments: {}", Arrays.toString(args));
+        if (args.length > 0 && args[0].equals("--generate")) {
+            int numOfVideosToGenerate = Integer.parseInt(args[1]);
+            List<Future<Integer>> futures = new ArrayList<>();
+            try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
+                for (int i = 1; i <= numOfVideosToGenerate; i++) {
+                    int finalI = i;
+                    Future<Integer> submit = executorService.submit(() -> {
+                        Random random = new Random();
+                        String deathColor = String.format("#%06X", random.nextInt(0x1000000));
+                        String liveColor = String.format("#%06X", random.nextInt(0x1000000));
+                        int time = random.nextInt(60) + 7;
+                        ProcessBuilder pb = new ProcessBuilder("ffmpeg", "-f", "lavfi", "-i", "life=s=300x200:mold=10:r=60:ratio=0.1:death_color=%s:life_color=%s".formatted(deathColor, liveColor), "-pix_fmt", "yuv420p", "-t", String.valueOf(time), "-n", videosDir.resolve("generated_%s.mp4".formatted(finalI)).toString());
+                        try {
+                            Process start = pb.start();
+                            List<String> strings;
+                            try (BufferedReader bufferedReader = start.errorReader()) {
+                                strings = bufferedReader.readAllLines();
+                            }
+                            if (!strings.isEmpty()) {
+                                System.err.println(strings);
+                            }
+                            return start.waitFor();
+                        } catch (InterruptedException | IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+                    futures.add(submit);
+                }
+
+                executorService.shutdown();
+                log.info("Executor terminated before timeout: {}", executorService.awaitTermination(60, TimeUnit.SECONDS));
+
+                futures.forEach(f -> {
+                    try {
+                        log.info("Generation exit code: {}", f.get());
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+        }
 
         //Load initial data from videos directory in the project
         try (Stream<Path> pathStream = Files.list(videosDir)) {

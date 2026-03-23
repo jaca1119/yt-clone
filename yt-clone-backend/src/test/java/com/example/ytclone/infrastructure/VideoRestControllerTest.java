@@ -92,7 +92,7 @@ public class VideoRestControllerTest {
                 .expectBody(new ParameterizedTypeReference<List<Video>>() {
                 })
                 .value(videos ->
-                        assertThat(videos).hasSize(5)
+                        assertThat(videos).hasSizeGreaterThanOrEqualTo(1)
                 );
     }
 
@@ -137,10 +137,9 @@ public class VideoRestControllerTest {
         //given
         UUID id = UUID.randomUUID();
         MockMultipartFile file = new MockMultipartFile("file", "file.xd", MediaType.IMAGE_JPEG_VALUE, "fake bytes".getBytes());
-        assertThat(mockMvcTester.get().uri("/videos"))
-                .bodyJson()
-                .convertTo(InstanceOfAssertFactories.LIST)
-                .hasSize(5);
+
+        List<Video> videos = restTestClient.get().uri("/videos").exchange().returnResult(new ParameterizedTypeReference<List<Video>>(){}).getResponseBody();
+        assertThat(videos).hasSizeGreaterThanOrEqualTo(1);
 
         //when
         mockMvc.perform(multipart("/videos/{id}", id).file(file))
@@ -150,7 +149,7 @@ public class VideoRestControllerTest {
         assertThat(mockMvcTester.get().uri("/videos"))
                 .bodyJson()
                 .convertTo(InstanceOfAssertFactories.LIST)
-                .hasSize(5);
+                .hasSize(videos.size());
     }
 
     @Test
@@ -158,11 +157,8 @@ public class VideoRestControllerTest {
         String initialTitle = "test title";
         MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
         //given initial videos
-        assertThat(mockMvcTester.get().uri("/videos"))
-                .bodyJson()
-                .convertTo(InstanceOfAssertFactories.LIST)
-                .hasSize(5);
-
+        List<Video> videos = restTestClient.get().uri("/videos").exchange().returnResult(new ParameterizedTypeReference<List<Video>>(){}).getResponseBody();
+        assertThat(videos).hasSizeGreaterThanOrEqualTo(1);
         //when start video upload
         VideoUploadResponse videoUploadResponse = objectMapper.readValue(mockMvcTester.post().uri("/videos")
                 .with(jwt())
@@ -178,7 +174,7 @@ public class VideoRestControllerTest {
         assertThat(mockMvcTester.get().uri("/videos"))
                 .bodyJson()
                 .convertTo(InstanceOfAssertFactories.LIST)
-                .hasSize(6);
+                .hasSize(videos.size() + 1);
 
         mockMvcTester.get().uri("/videos/{id}/metadata", videoUploadResponse.videoId())
                 .assertThat()
@@ -329,7 +325,7 @@ public class VideoRestControllerTest {
                 .expectBody(new ParameterizedTypeReference<List<Video>>() {
                 })
                 .value(videos -> {
-                            assertThat(videos).hasSize(5);
+                            assertThat(videos).hasSizeGreaterThanOrEqualTo(1);
                             assertThat(videos).extracting(Video::getId).doesNotContain(id);
                         }
                 );
@@ -343,15 +339,12 @@ public class VideoRestControllerTest {
         String differentUser = "different user";
 
         //given all videos
-        restTestClient.get().uri("/videos")
+        List<Video> videos = restTestClient.get().uri("/videos")
                 .exchange()
                 .expectStatus()
                 .isOk()
                 .expectBody(new ParameterizedTypeReference<List<Video>>() {
-                })
-                .value(videos ->
-                        assertThat(videos).hasSize(5)
-                );
+                }).returnResult().getResponseBody();
 
         //when upload video by different user
         UUID id = startVideoUpload(differentUser);
@@ -374,15 +367,12 @@ public class VideoRestControllerTest {
                 .hasSize(1);
 
         //all videos should be initial + 1
-        restTestClient.get().uri("/videos")
-                .exchange()
-                .expectStatus()
-                .isOk()
-                .expectBody(new ParameterizedTypeReference<List<Video>>() {
-                })
-                .value(videos ->
-                        assertThat(videos).hasSize(6)
-                );
+        mockMvcTester.get().uri("/videos")
+                .assertThat()
+                .hasStatusOk()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.LIST)
+                .hasSize(videos.size() + 1);
 
         //cleanup
         deleteVideo(id, differentUser);
