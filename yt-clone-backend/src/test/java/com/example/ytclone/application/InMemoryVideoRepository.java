@@ -191,4 +191,9 @@ public class InMemoryVideoRepository implements VideoRepository {
     public List<VideoEntity> findAllByCreatedBy(String user) {
         return videos.values().stream().filter(v -> v.getCreatedBy().equals(user)).toList();
     }
+
+    @Override
+    public Optional<VideoEntity> findByFilename(String filename) {
+        return videos.values().stream().filter(v -> v.getFilename().equals(filename)).findFirst();
+    }
 }

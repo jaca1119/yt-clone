@@ -45,6 +45,7 @@ public class YtCloneApplication implements CommandLineRunner {
         //Load initial data from videos directory in the project
         try (Stream<Path> pathStream = Files.list(videosDir)) {
             List<VideoEntity> videos = pathStream.filter(file -> file.getFileName().toString().endsWith(".mp4"))
+                    .filter(file -> videoRepository.findByFilename(file.getFileName().toString()).isEmpty())
                     .map(file -> {
                         ProcessBuilder processBuilder = new ProcessBuilder("ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", file.toAbsolutePath().toString());
                         processBuilder.redirectErrorStream(true);
@@ -61,6 +62,7 @@ public class YtCloneApplication implements CommandLineRunner {
                                 //wait for?
                                 pb.start();
 
+                                log.info("Saving initial video file: {}", file.getFileName());
                                 return new VideoEntity(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, "System", videoDuration.getSeconds(), LocalDateTime.now());
                             }
                         } catch (Exception e) {
