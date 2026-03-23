@@ -36,7 +36,11 @@ export function VideosList({
               }}
             >
               <div className="w-105">
-                <Thumbnail videoId={id} length={length}></Thumbnail>
+                <Thumbnail
+                  className="aspect-video"
+                  videoId={id}
+                  length={length}
+                ></Thumbnail>
                 <div>{title}</div>
                 <div>{dayjs(uploadDate).fromNow()}</div>
                 <div>Uploaded by: {creator} </div>
