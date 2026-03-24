@@ -2,14 +2,33 @@ import { useLocation } from "react-router";
 import type { Route } from "./+types/video";
 import LocalizedFormat from "dayjs/plugin/localizedFormat";
 import { useEffect, useState } from "react";
-import { getVideoMetadata, type Video } from "~/scripts/api";
+import {
+  addComment,
+  type Comment,
+  getVideoComments,
+  getVideoMetadata,
+  type Video,
+} from "~/scripts/api";
 import dayjs from "dayjs";
+import { useFetcher } from "react-router";
 dayjs.extend(LocalizedFormat);
+
+export async function clientAction({ request }: Route.ClientActionArgs) {
+  const formData = await request.formData();
+  const videoId = formData.get("videoId") as string;
+  const comment = formData.get("comment") as string;
+
+  await addComment(videoId, comment);
+
+  return { ok: true };
+}
 
 export default function Video({ params }: Route.ComponentProps) {
   const location = useLocation();
+  const fetcher = useFetcher();
 
   const [video, setVideo] = useState<Video | null>(location.state);
+  const [comments, setComments] = useState<Comment[] | null>();
 
   useEffect(() => {
     async function fetchVideoMetadata() {
@@ -17,10 +36,17 @@ export default function Video({ params }: Route.ComponentProps) {
       setVideo(data);
     }
 
+    async function fetchVideoComments() {
+      const comments = await getVideoComments(params.id);
+      setComments(comments);
+    }
+
     if (!video) {
       fetchVideoMetadata();
     }
-  });
+
+    fetchVideoComments();
+  }, [params.id]);
 
   return (
     <div className="flex flex-col m-auto items-center w-5xl">
@@ -38,6 +64,28 @@ export default function Video({ params }: Route.ComponentProps) {
           </div>
         </>
       )}
+      <div className="self-start">
+        <fetcher.Form method="POST">
+          {video && (
+            <input type="hidden" name="videoId" value={video.id}></input>
+          )}
+          <label htmlFor="comment">Add comment:</label>
+          <textarea name="comment"></textarea>
+          <button type="submit">Add</button>
+        </fetcher.Form>
+        <p className="font-bold text-xl">Comments</p>
+        <div>
+          {comments &&
+            comments.map((c) => (
+              <>
+                <p>
+                  {c.content} by {c.createdBy} at:{" "}
+                  {dayjs(c.createdAt).fromNow()}
+                </p>
+              </>
+            ))}
+        </div>
+      </div>
     </div>
   );
 }

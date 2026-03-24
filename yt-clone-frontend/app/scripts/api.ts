@@ -13,6 +13,17 @@ export interface UploadVideoResponse {
   videoId: string;
 }
 
+export interface Comment {
+  id: number;
+  content: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+interface CommentResponse {
+  commentId: number;
+}
+
 export async function getAllVideos() {
   const res = await fetch("http://localhost:8080/videos");
   return (await res.json()) as Video[];
@@ -87,4 +98,28 @@ export async function deleteVideo(videoId: string) {
       Authorization: "Bearer " + getAccessToken(),
     },
   });
+}
+
+export async function getVideoComments(videoId: string) {
+  const res = await axios.get<Comment[]>(
+    `http://localhost:8080/videos/${videoId}/comments/newest`,
+  );
+
+  return res.data;
+}
+
+export async function addComment(videoId: string, comment: string) {
+  const res = await axios.post<CommentResponse>(
+    `http://localhost:8080/videos/${videoId}/comments`,
+    {
+      comment: comment,
+    },
+    {
+      headers: {
+        Authorization: "Bearer " + getAccessToken(),
+      },
+    },
+  );
+
+  return res.data;
 }
