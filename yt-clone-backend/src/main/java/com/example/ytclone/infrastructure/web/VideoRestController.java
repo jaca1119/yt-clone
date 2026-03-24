@@ -46,6 +46,7 @@ public class VideoRestController {
     }
 
     //Spring handles range automatically
+    //TODO Browser (e.g. firefox) sends range for full data and stops consuming if has enough data. Test if spring load full file, or send it in chunks
     @GetMapping("/{id}")
     public ResponseEntity<Resource> streamVideo(@PathVariable UUID id) {
         Optional<Resource> fileSystemResource = videoService.getVideoFilePath(id).map(FileSystemResource::new);
