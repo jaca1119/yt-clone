@@ -1,5 +1,6 @@
 package com.example.ytclone.application;
 
+import com.example.ytclone.domain.Comment;
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.media.VideoProcessor;
 import com.example.ytclone.infrastructure.persistence.CommentEntity;
@@ -144,15 +145,25 @@ public class VideoService {
                         });
     }
 
-    private Video toVideo(VideoEntity videoEntity) {
-        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate());
-    }
-
     @Transactional
     public long comment(UUID videoId, String comment, String user, Optional<Long> parentId) {
         VideoEntity videoEntity = videoRepository.findById(videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Optional<CommentEntity> optionalComment = parentId.map(id -> commentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent comment not found")));
         CommentEntity save = commentRepository.save(new CommentEntity(null, comment, videoEntity, optionalComment.orElse(null), 0, 0, LocalDateTime.now(), user));
         return save.getId();
+    }
+
+    public List<Comment> getNewestCommentsForVideo(UUID videoId, long offset) {
+        return videoRepository.findById(videoId)
+                .map(v -> commentRepository.findTop10ByVideoOffset(v, offset).stream().map(this::toComment).toList())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    private Video toVideo(VideoEntity videoEntity) {
+        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate());
+    }
+
+    private Comment toComment(CommentEntity commentEntity) {
+        return new Comment(commentEntity.getId(), commentEntity.getContent(), commentEntity.getLikes(), commentEntity.getDislikes(), commentEntity.getCreatedBy(), commentEntity.getCreatedAt());
     }
 }

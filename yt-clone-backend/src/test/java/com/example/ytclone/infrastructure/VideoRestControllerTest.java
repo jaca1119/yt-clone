@@ -1,6 +1,7 @@
 package com.example.ytclone.infrastructure;
 
 import com.example.ytclone.TestcontainersConfiguration;
+import com.example.ytclone.domain.Comment;
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.web.*;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -29,6 +30,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -388,7 +390,6 @@ public class VideoRestControllerTest {
         assertThat(createdComment).isNotNull();
         assertThat(createdComment.commentId()).isGreaterThan(0);
 
-
         CommentResponse responseComment = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments/{parentId}", videoId, createdComment.commentId())
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -399,6 +400,62 @@ public class VideoRestControllerTest {
         assertThat(responseComment).isNotNull();
         assertThat(responseComment.commentId()).isGreaterThan(0);
         assertThat(responseComment.commentId()).isNotEqualTo(createdComment.commentId());
+
+        mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.list(Comment.class))
+                .hasSize(1);
+    }
+
+    @Test
+    void shouldPaginateComments() {
+        //given no comments
+        mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.list(Comment.class))
+                .hasSize(0);
+
+        //when
+        List<Long> comments = createComments();
+
+        //then get latest 10 comments
+        mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.list(Comment.class))
+                .hasSize(10)
+                .map(Comment::id)
+                .containsExactly(comments.reversed().stream().limit(10).toArray(Long[]::new));
+
+        //then get next page of latest 10 comments
+        mockMvcTester.get().uri("/videos/{videoId}/comments/newest?offset={offset}", videoId, 10)
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.list(Comment.class))
+                .hasSize(10)
+                .map(Comment::id)
+                .containsExactly(comments.reversed().stream().skip(10).limit(10).toArray(Long[]::new));
+    }
+
+    List<Long> createComments() {
+        try {
+            List<Long> commentsIds = new ArrayList<>();
+            for (int i = 0; i < 100; i++) {
+                CommentResponse createdComment = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments", videoId)
+                        .with(jwt())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new CommentRequest("Test comment")))
+                        .exchange()
+                        .getResponse().getContentAsString(), CommentResponse.class);
+                commentsIds.add(createdComment.commentId());
+            }
+
+            return commentsIds;
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     UUID startVideoUpload() {

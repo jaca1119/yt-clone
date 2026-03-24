@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers(HttpMethod.GET, "/videos").permitAll()
                         .requestMatchers(HttpMethod.GET, "/videos/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/videos/{id}/comments/*").permitAll()
                         .requestMatchers("/videos/*/thumbnail").permitAll()
                         .requestMatchers("/videos/*/metadata").permitAll()
                         .requestMatchers("/videos/*").authenticated()

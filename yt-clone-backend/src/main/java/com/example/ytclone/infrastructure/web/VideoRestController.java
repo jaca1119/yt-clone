@@ -1,6 +1,7 @@
 package com.example.ytclone.infrastructure.web;
 
 import com.example.ytclone.application.VideoService;
+import com.example.ytclone.domain.Comment;
 import com.example.ytclone.domain.Video;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
@@ -111,5 +112,11 @@ public class VideoRestController {
     public ResponseEntity<CommentResponse> comment(@PathVariable UUID videoId, @PathVariable Optional<Long> parentId, @RequestBody CommentRequest commentRequest, @AuthenticationPrincipal Jwt jwt) {
         long commentId = videoService.comment(videoId, commentRequest.comment(), jwt.getSubject(), parentId);
         return ResponseEntity.status(HttpStatus.CREATED).body(new CommentResponse(commentId));
+    }
+
+    @GetMapping("/{videoId}/comments/newest")
+    public ResponseEntity<List<Comment>> getNewestComments(@PathVariable UUID videoId, @RequestParam Optional<Long> offset) {
+        List<Comment> newestCommentsForVideo = videoService.getNewestCommentsForVideo(videoId, offset.orElse(0L));
+        return ResponseEntity.ok(newestCommentsForVideo);
     }
 }
