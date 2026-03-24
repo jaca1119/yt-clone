@@ -150,13 +150,9 @@ public class VideoService {
 
     @Transactional
     public long comment(UUID videoId, String comment, String user, Optional<Long> parentId) {
-        return videoRepository.findById(videoId)
-                .map(v -> {
-                    Optional<CommentEntity> optionalComment = parentId.map(id -> commentRepository.findById(id)
-                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent comment not found")));
-                    CommentEntity save = commentRepository.save(new CommentEntity(null, comment, v, optionalComment.orElse(null), 0, 0, LocalDateTime.now(), user));
-                    return save.getId();
-                })
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        VideoEntity videoEntity = videoRepository.findById(videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Optional<CommentEntity> optionalComment = parentId.map(id -> commentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent comment not found")));
+        CommentEntity save = commentRepository.save(new CommentEntity(null, comment, videoEntity, optionalComment.orElse(null), 0, 0, LocalDateTime.now(), user));
+        return save.getId();
     }
 }
