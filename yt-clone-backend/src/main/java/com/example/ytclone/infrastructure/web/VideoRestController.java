@@ -5,6 +5,7 @@ import com.example.ytclone.domain.Video;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -103,5 +104,11 @@ public class VideoRestController {
     public ResponseEntity deleteVideo(@PathVariable UUID id, @AuthenticationPrincipal Jwt principal) {
         videoService.deleteVideo(id, principal.getSubject());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping({"/{videoId}/comments", "/{videoId}/comments/{parentId}"})
+    public ResponseEntity<CommentResponse> comment(@PathVariable UUID videoId, @PathVariable Optional<Long> parentId, @RequestBody CommentRequest commentRequest, @AuthenticationPrincipal Jwt jwt) {
+        long commentId = videoService.comment(videoId, commentRequest.comment(), jwt.getSubject(), parentId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new CommentResponse(commentId));
     }
 }

@@ -1,14 +1,12 @@
 package com.example.ytclone.infrastructure.persistence;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -25,5 +23,7 @@ public class VideoEntity {
     @Column(nullable = false, updatable = false)
     private String createdBy;
     private Long length;
+    @OneToMany(mappedBy = "video", cascade = CascadeType.REMOVE)
+    private List<CommentEntity> comments;
     private LocalDateTime uploadDate;
 }

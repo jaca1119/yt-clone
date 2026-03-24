@@ -2,6 +2,8 @@ package com.example.ytclone.application;
 
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.media.VideoProcessor;
+import com.example.ytclone.infrastructure.persistence.CommentEntity;
+import com.example.ytclone.infrastructure.persistence.CommentRepository;
 import com.example.ytclone.infrastructure.persistence.VideoEntity;
 import com.example.ytclone.infrastructure.persistence.VideoRepository;
 import com.example.ytclone.infrastructure.web.VideoUpdateDTO;
@@ -27,10 +29,12 @@ public class VideoService {
     private final Path videosDirectory = Path.of("videos").toAbsolutePath();
     private final Path thumbnailsDirectory = Path.of("videos/thumbnails").toAbsolutePath();
     private final VideoRepository videoRepository;
+    private final CommentRepository commentRepository;
     private final VideoProcessor videoProcessor;
 
-    public VideoService(VideoRepository videoRepository, VideoProcessor videoProcessor) {
+    public VideoService(VideoRepository videoRepository, CommentRepository commentRepository, VideoProcessor videoProcessor) {
         this.videoRepository = videoRepository;
+        this.commentRepository = commentRepository;
         this.videoProcessor = videoProcessor;
     }
 
@@ -59,7 +63,7 @@ public class VideoService {
     @Transactional
     public UUID startVideoUpload(String title, String user, LocalDateTime uploadTime) {
         UUID id = UUID.randomUUID();
-        videoRepository.save(new VideoEntity(id, null, title, user, null, uploadTime));
+        videoRepository.save(new VideoEntity(id, null, title, user, null, null, uploadTime));
         return id;
     }
 
@@ -142,5 +146,17 @@ public class VideoService {
 
     private Video toVideo(VideoEntity videoEntity) {
         return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate());
+    }
+
+    @Transactional
+    public long comment(UUID videoId, String comment, String user, Optional<Long> parentId) {
+        return videoRepository.findById(videoId)
+                .map(v -> {
+                    Optional<CommentEntity> optionalComment = parentId.map(id -> commentRepository.findById(id)
+                            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent comment not found")));
+                    CommentEntity save = commentRepository.save(new CommentEntity(null, comment, v, optionalComment.orElse(null), 0, 0, LocalDateTime.now(), user));
+                    return save.getId();
+                })
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 }

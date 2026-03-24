@@ -107,7 +107,7 @@ public class YtCloneApplication implements CommandLineRunner {
                                 pb.start();
 
                                 log.info("Saving initial video file: {}", file.getFileName());
-                                return new VideoEntity(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, "System", videoDuration.getSeconds(), LocalDateTime.now());
+                                return new VideoEntity(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, "System", videoDuration.getSeconds(), null, LocalDateTime.now());
                             }
                         } catch (Exception e) {
                             //skip when exception, filter later

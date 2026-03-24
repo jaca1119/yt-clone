@@ -2,6 +2,7 @@ package com.example.ytclone.application;
 
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.media.VideoProcessor;
+import com.example.ytclone.infrastructure.persistence.CommentRepository;
 import com.example.ytclone.infrastructure.persistence.VideoRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -20,8 +21,9 @@ import static org.mockito.Mockito.when;
 public class VideoServiceTest {
 
     VideoRepository videoRepository = new InMemoryVideoRepository();
+    CommentRepository commentRepository = Mockito.mock();
     VideoProcessor videoProcessor = Mockito.mock();
-    VideoService videoService = new VideoService(videoRepository, videoProcessor);
+    VideoService videoService = new VideoService(videoRepository, commentRepository, videoProcessor);
 
     @Test
     void shouldReturnPathToVideoFile() {

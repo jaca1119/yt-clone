@@ -8,10 +8,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update #for dev
-  show-sql: true
-  properties:
-    hibernate:
-      format_sql: true
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
 #TODO set file size limits, and set threshold so spring will copy file instead of handling it in memory
 #logging:

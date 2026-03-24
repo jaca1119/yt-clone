@@ -2,9 +2,7 @@ package com.example.ytclone.infrastructure;
 
 import com.example.ytclone.TestcontainersConfiguration;
 import com.example.ytclone.domain.Video;
-import com.example.ytclone.infrastructure.web.VideoUpdateDTO;
-import com.example.ytclone.infrastructure.web.VideoUploadRequest;
-import com.example.ytclone.infrastructure.web.VideoUploadResponse;
+import com.example.ytclone.infrastructure.web.*;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -376,6 +374,31 @@ public class VideoRestControllerTest {
 
         //cleanup
         deleteVideo(id, differentUser);
+    }
+
+    @Test
+    void shouldAddCommentToVideo() throws UnsupportedEncodingException {
+        CommentResponse createdComment = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments", videoId)
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new CommentRequest("Test comment")))
+                .exchange()
+                .getResponse().getContentAsString(), CommentResponse.class);
+
+        assertThat(createdComment).isNotNull();
+        assertThat(createdComment.commentId()).isGreaterThan(0);
+
+
+        CommentResponse responseComment = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments/{parentId}", videoId, createdComment.commentId())
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new CommentRequest("Test response to comment")))
+                .exchange()
+                .getResponse().getContentAsString(), CommentResponse.class);
+
+        assertThat(responseComment).isNotNull();
+        assertThat(responseComment.commentId()).isGreaterThan(0);
+        assertThat(responseComment.commentId()).isNotEqualTo(createdComment.commentId());
     }
 
     UUID startVideoUpload() {
