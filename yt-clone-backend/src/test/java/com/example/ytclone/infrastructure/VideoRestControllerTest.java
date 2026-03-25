@@ -388,7 +388,7 @@ public class VideoRestControllerTest {
                 .getResponse().getContentAsString(), CommentResponse.class);
 
         assertThat(createdComment).isNotNull();
-        assertThat(createdComment.commentId()).isGreaterThan(0);
+        assertThat(createdComment.commentId()).isNotNull();
 
         CommentResponse responseComment = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments/{parentId}", videoId, createdComment.commentId())
                 .with(jwt())
@@ -398,7 +398,7 @@ public class VideoRestControllerTest {
                 .getResponse().getContentAsString(), CommentResponse.class);
 
         assertThat(responseComment).isNotNull();
-        assertThat(responseComment.commentId()).isGreaterThan(0);
+        assertThat(responseComment.commentId()).isNotNull();
         assertThat(responseComment.commentId()).isNotEqualTo(createdComment.commentId());
 
         mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
@@ -418,7 +418,7 @@ public class VideoRestControllerTest {
                 .hasSize(0);
 
         //when
-        List<Long> comments = createComments();
+        List<UUID> comments = createComments();
 
         //then get latest 10 comments
         mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
@@ -427,7 +427,7 @@ public class VideoRestControllerTest {
                 .convertTo(InstanceOfAssertFactories.list(Comment.class))
                 .hasSize(10)
                 .map(Comment::id)
-                .containsExactly(comments.reversed().stream().limit(10).toArray(Long[]::new));
+                .containsExactly(comments.reversed().stream().limit(10).toArray(UUID[]::new));
 
         //then get next page of latest 10 comments
         mockMvcTester.get().uri("/videos/{videoId}/comments/newest?offset={offset}", videoId, 10)
@@ -436,12 +436,12 @@ public class VideoRestControllerTest {
                 .convertTo(InstanceOfAssertFactories.list(Comment.class))
                 .hasSize(10)
                 .map(Comment::id)
-                .containsExactly(comments.reversed().stream().skip(10).limit(10).toArray(Long[]::new));
+                .containsExactly(comments.reversed().stream().skip(10).limit(10).toArray(UUID[]::new));
     }
 
-    List<Long> createComments() {
+    List<UUID> createComments() {
         try {
-            List<Long> commentsIds = new ArrayList<>();
+            List<UUID> commentsIds = new ArrayList<>();
             for (int i = 0; i < 100; i++) {
                 CommentResponse createdComment = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments", videoId)
                         .with(jwt())

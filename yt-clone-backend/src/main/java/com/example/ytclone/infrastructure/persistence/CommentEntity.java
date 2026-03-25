@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "comments")
@@ -14,8 +15,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode
 public class CommentEntity {
     @Id
-    @GeneratedValue
-    private Long id;
+    private UUID id;
 
     private String content;
 

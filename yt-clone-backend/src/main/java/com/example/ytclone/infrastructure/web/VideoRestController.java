@@ -109,8 +109,8 @@ public class VideoRestController {
     }
 
     @PostMapping({"/{videoId}/comments", "/{videoId}/comments/{parentId}"})
-    public ResponseEntity<CommentResponse> comment(@PathVariable UUID videoId, @PathVariable Optional<Long> parentId, @RequestBody CommentRequest commentRequest, @AuthenticationPrincipal Jwt jwt) {
-        long commentId = videoService.comment(videoId, commentRequest.comment(), jwt.getSubject(), parentId);
+    public ResponseEntity<CommentResponse> comment(@PathVariable UUID videoId, @PathVariable Optional<UUID> parentId, @RequestBody CommentRequest commentRequest, @AuthenticationPrincipal Jwt jwt) {
+        UUID commentId = videoService.comment(videoId, commentRequest.comment(), jwt.getSubject(), parentId);
         return ResponseEntity.status(HttpStatus.CREATED).body(new CommentResponse(commentId));
     }
 

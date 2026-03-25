@@ -1,4 +1,6 @@
 package com.example.ytclone.infrastructure.web;
 
-public record CommentResponse(long commentId) {
+import java.util.UUID;
+
+public record CommentResponse(UUID commentId) {
 }
