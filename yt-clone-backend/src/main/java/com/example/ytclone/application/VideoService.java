@@ -7,6 +7,7 @@ import com.example.ytclone.infrastructure.persistence.CommentEntity;
 import com.example.ytclone.infrastructure.persistence.CommentRepository;
 import com.example.ytclone.infrastructure.persistence.VideoEntity;
 import com.example.ytclone.infrastructure.persistence.VideoRepository;
+import com.example.ytclone.infrastructure.web.CommentsPageOffset;
 import com.example.ytclone.infrastructure.web.VideoUpdateDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -153,9 +154,12 @@ public class VideoService {
         return save.getId();
     }
 
-    public List<Comment> getNewestCommentsForVideo(UUID videoId, long offset) {
+    public CommentsPageOffset getNewestCommentsForVideo(UUID videoId, long offset) {
         return videoRepository.findById(videoId)
-                .map(v -> commentRepository.findTop10ByVideoOffset(v, offset).stream().map(this::toComment).toList())
+                .map(v -> {
+                    List<Comment> comments = commentRepository.findTop10ByVideoOffset(v, offset).stream().map(this::toComment).toList();
+                    return new CommentsPageOffset(comments, comments.size() == 10);
+                })
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 

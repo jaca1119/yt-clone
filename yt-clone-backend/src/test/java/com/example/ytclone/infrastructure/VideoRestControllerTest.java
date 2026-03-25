@@ -404,8 +404,8 @@ public class VideoRestControllerTest {
         mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
                 .assertThat()
                 .bodyJson()
-                .convertTo(InstanceOfAssertFactories.list(Comment.class))
-                .hasSize(1);
+                .convertTo(CommentsPageOffset.class)
+                .satisfies(c -> assertThat(c.comments()).hasSize(1));
     }
 
     @Test
@@ -414,8 +414,8 @@ public class VideoRestControllerTest {
         mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
                 .assertThat()
                 .bodyJson()
-                .convertTo(InstanceOfAssertFactories.list(Comment.class))
-                .hasSize(0);
+                .convertTo(CommentsPageOffset.class)
+                .satisfies(c -> assertThat(c.comments()).hasSize(0));
 
         //when
         List<UUID> comments = createComments();
@@ -424,8 +424,10 @@ public class VideoRestControllerTest {
         mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
                 .assertThat()
                 .bodyJson()
-                .convertTo(InstanceOfAssertFactories.list(Comment.class))
-                .hasSize(10)
+                .convertTo(CommentsPageOffset.class)
+                .satisfies(c -> assertThat(c.comments()).hasSize(10))
+                .extracting(CommentsPageOffset::comments)
+                .asInstanceOf(InstanceOfAssertFactories.list(Comment.class))
                 .map(Comment::id)
                 .containsExactly(comments.reversed().stream().limit(10).toArray(UUID[]::new));
 
@@ -433,8 +435,10 @@ public class VideoRestControllerTest {
         mockMvcTester.get().uri("/videos/{videoId}/comments/newest?offset={offset}", videoId, 10)
                 .assertThat()
                 .bodyJson()
-                .convertTo(InstanceOfAssertFactories.list(Comment.class))
-                .hasSize(10)
+                .convertTo(CommentsPageOffset.class)
+                .satisfies(c -> assertThat(c.comments()).hasSize(10))
+                .extracting(CommentsPageOffset::comments)
+                .asInstanceOf(InstanceOfAssertFactories.list(Comment.class))
                 .map(Comment::id)
                 .containsExactly(comments.reversed().stream().skip(10).limit(10).toArray(UUID[]::new));
     }

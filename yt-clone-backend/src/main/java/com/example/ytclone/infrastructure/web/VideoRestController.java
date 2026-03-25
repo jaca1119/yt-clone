@@ -1,7 +1,6 @@
 package com.example.ytclone.infrastructure.web;
 
 import com.example.ytclone.application.VideoService;
-import com.example.ytclone.domain.Comment;
 import com.example.ytclone.domain.Video;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -118,9 +117,9 @@ public class VideoRestController {
     }
 
     @GetMapping("/{videoId}/comments/newest")
-    public ResponseEntity<List<Comment>> getNewestComments(@PathVariable UUID videoId, @RequestParam Optional<Long> offset) {
+    public ResponseEntity<CommentsPageOffset> getNewestComments(@PathVariable UUID videoId, @RequestParam Optional<Long> offset) {
         Instant start = Instant.now();
-        List<Comment> newestCommentsForVideo = videoService.getNewestCommentsForVideo(videoId, offset.orElse(0L));
+        CommentsPageOffset newestCommentsForVideo = videoService.getNewestCommentsForVideo(videoId, offset.orElse(0L));
         log.info("Get newest comments for video: {}, offset: {}, duration: {}", videoId, offset, Duration.between(start, Instant.now()));
         return ResponseEntity.ok(newestCommentsForVideo);
     }
