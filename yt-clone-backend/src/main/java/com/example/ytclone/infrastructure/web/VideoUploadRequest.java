@@ -1,4 +1,6 @@
 package com.example.ytclone.infrastructure.web;
 
-public record VideoUploadRequest(String title) {
+import jakarta.validation.constraints.NotEmpty;
+
+public record VideoUploadRequest(@NotEmpty String title) {
 }

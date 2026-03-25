@@ -1,4 +1,6 @@
 package com.example.ytclone.infrastructure.web;
 
-public record CommentRequest(String comment) {
+import jakarta.validation.constraints.NotEmpty;
+
+public record CommentRequest(@NotEmpty String comment) {
 }

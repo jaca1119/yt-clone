@@ -12,8 +12,15 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
 #TODO set file size limits, and set threshold so spring will copy file instead of handling it in memory
+#  servlet:
+#    multipart:
+#      max-file-size: 10GB # Maximum file size (default is 1MB)
+#      max-request-size: 10GB # Maximum request size (includes all files and form data)
+#      file-size-threshold: 2MB # !MOST IMPORTANT! Threshold after which files are written to disk instead of memory
+#      location: /tmp/uploads # Temporary directory for file storage during upload
+#      resolve-lazily: true # Enable lazy resolution of multipart requests
+
 #logging:
 #  level:
 #    org:

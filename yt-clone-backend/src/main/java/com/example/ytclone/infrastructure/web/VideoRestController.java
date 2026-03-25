@@ -3,6 +3,7 @@ package com.example.ytclone.infrastructure.web;
 import com.example.ytclone.application.VideoService;
 import com.example.ytclone.domain.Comment;
 import com.example.ytclone.domain.Video;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -73,7 +74,7 @@ public class VideoRestController {
     }
 
     @PostMapping
-    public ResponseEntity<VideoUploadResponse> startVideoUpload(@RequestBody VideoUploadRequest videoUploadRequest, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<VideoUploadResponse> startVideoUpload(@RequestBody @Valid VideoUploadRequest videoUploadRequest, @AuthenticationPrincipal Jwt jwt) {
         UUID id = videoService.startVideoUpload(videoUploadRequest.title(), jwt.getSubject(), LocalDateTime.now());
         return ResponseEntity.created(URI.create("/videos/%s/metadata".formatted(id))).body(new VideoUploadResponse(id));
     }
@@ -111,7 +112,7 @@ public class VideoRestController {
     }
 
     @PostMapping({"/{videoId}/comments", "/{videoId}/comments/{parentId}"})
-    public ResponseEntity<CommentResponse> comment(@PathVariable UUID videoId, @PathVariable Optional<UUID> parentId, @RequestBody CommentRequest commentRequest, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<CommentResponse> comment(@PathVariable UUID videoId, @PathVariable Optional<UUID> parentId, @Valid @RequestBody CommentRequest commentRequest, @AuthenticationPrincipal Jwt jwt) {
         UUID commentId = videoService.comment(videoId, commentRequest.comment(), jwt.getSubject(), parentId);
         return ResponseEntity.status(HttpStatus.CREATED).body(new CommentResponse(commentId));
     }
