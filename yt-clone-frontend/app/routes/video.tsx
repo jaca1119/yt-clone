@@ -10,8 +10,10 @@ import {
   type Video,
 } from "~/scripts/api";
 import dayjs from "dayjs";
+import RelativeTime from "dayjs/plugin/relativeTime";
 import { useFetcher } from "react-router";
 dayjs.extend(LocalizedFormat);
+dayjs.extend(RelativeTime);
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
@@ -29,6 +31,9 @@ export default function Video({ params }: Route.ComponentProps) {
 
   const [video, setVideo] = useState<Video | null>(location.state);
   const [comments, setComments] = useState<Comment[] | null>();
+  const [hasNext, setHasNext] = useState(false);
+
+  let currentOffset = 0;
 
   useEffect(() => {
     async function fetchVideoMetadata() {
@@ -38,7 +43,8 @@ export default function Video({ params }: Route.ComponentProps) {
 
     async function fetchVideoComments() {
       const comments = await getVideoComments(params.id);
-      setComments(comments);
+      setComments(comments.comments);
+      setHasNext(comments.hasNext);
     }
 
     if (!video) {
@@ -47,6 +53,16 @@ export default function Video({ params }: Route.ComponentProps) {
 
     fetchVideoComments();
   }, [params.id]);
+
+  function showMore() {
+    currentOffset += 10;
+    getVideoComments(params.id, currentOffset).then((c) => {
+      if (comments) {
+        setComments(comments.concat(c.comments));
+        setHasNext(c.hasNext);
+      }
+    });
+  }
 
   return (
     <div className="flex flex-col m-auto items-center w-5xl">
@@ -77,13 +93,18 @@ export default function Video({ params }: Route.ComponentProps) {
         <div>
           {comments &&
             comments.map((c) => (
-              <>
+              <div key={c.id}>
                 <p>
                   {c.content} by {c.createdBy} at:{" "}
                   {dayjs(c.createdAt).fromNow()}
                 </p>
-              </>
+              </div>
             ))}
+          {hasNext && (
+            <>
+              <button onClick={showMore}>Show more</button>
+            </>
+          )}
         </div>
       </div>
     </div>

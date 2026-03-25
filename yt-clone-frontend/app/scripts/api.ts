@@ -24,6 +24,11 @@ interface CommentResponse {
   commentId: number;
 }
 
+interface CommentsPageOffset {
+  comments: Comment[];
+  hasNext: boolean;
+}
+
 export async function getAllVideos() {
   const res = await fetch("http://localhost:8080/videos");
   return (await res.json()) as Video[];
@@ -100,9 +105,9 @@ export async function deleteVideo(videoId: string) {
   });
 }
 
-export async function getVideoComments(videoId: string) {
-  const res = await axios.get<Comment[]>(
-    `http://localhost:8080/videos/${videoId}/comments/newest`,
+export async function getVideoComments(videoId: string, offset?: number) {
+  const res = await axios.get<CommentsPageOffset>(
+    `http://localhost:8080/videos/${videoId}/comments/newest?offset=${offset || ""}`,
   );
 
   return res.data;
