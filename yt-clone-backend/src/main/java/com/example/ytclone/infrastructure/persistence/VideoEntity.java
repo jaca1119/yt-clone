@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,5 +27,7 @@ public class VideoEntity {
     @OneToMany(mappedBy = "video", cascade = CascadeType.REMOVE)
     private List<CommentEntity> comments;
     private LocalDateTime uploadDate;
-    private long viewsCount;
+    @Column(nullable = false)
+    @ColumnDefault("0")
+    private long viewsCount = 0;
 }
