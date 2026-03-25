@@ -26,4 +26,5 @@ public class VideoEntity {
     @OneToMany(mappedBy = "video", cascade = CascadeType.REMOVE)
     private List<CommentEntity> comments;
     private LocalDateTime uploadDate;
+    private long viewsCount;
 }

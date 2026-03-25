@@ -3,7 +3,7 @@ package com.example.ytclone.infrastructure;
 import com.example.ytclone.TestcontainersConfiguration;
 import com.example.ytclone.domain.Comment;
 import com.example.ytclone.domain.Video;
-import com.example.ytclone.infrastructure.web.*;
+import com.example.ytclone.infrastructure.web.dto.*;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -138,7 +138,8 @@ public class VideoRestControllerTest {
         UUID id = UUID.randomUUID();
         MockMultipartFile file = new MockMultipartFile("file", "file.xd", MediaType.IMAGE_JPEG_VALUE, "fake bytes".getBytes());
 
-        List<Video> videos = restTestClient.get().uri("/videos").exchange().returnResult(new ParameterizedTypeReference<List<Video>>(){}).getResponseBody();
+        List<Video> videos = restTestClient.get().uri("/videos").exchange().returnResult(new ParameterizedTypeReference<List<Video>>() {
+        }).getResponseBody();
         assertThat(videos).hasSizeGreaterThanOrEqualTo(1);
 
         //when
@@ -157,7 +158,8 @@ public class VideoRestControllerTest {
         String initialTitle = "test title";
         MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
         //given initial videos
-        List<Video> videos = restTestClient.get().uri("/videos").exchange().returnResult(new ParameterizedTypeReference<List<Video>>(){}).getResponseBody();
+        List<Video> videos = restTestClient.get().uri("/videos").exchange().returnResult(new ParameterizedTypeReference<List<Video>>() {
+        }).getResponseBody();
         assertThat(videos).hasSizeGreaterThanOrEqualTo(1);
         //when start video upload
         VideoUploadResponse videoUploadResponse = objectMapper.readValue(mockMvcTester.post().uri("/videos")
@@ -441,6 +443,25 @@ public class VideoRestControllerTest {
                 .asInstanceOf(InstanceOfAssertFactories.list(Comment.class))
                 .map(Comment::id)
                 .containsExactly(comments.reversed().stream().skip(10).limit(10).toArray(UUID[]::new));
+    }
+
+    @Test
+    void shouldTrackVideoView() {
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> assertThat(video.getViewsCount()).isZero());
+
+        mockMvcTester.post().uri("/videos/{videoId}/views", videoId)
+                .assertThat()
+                .hasStatus(HttpStatus.NO_CONTENT);
+
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> assertThat(video.getViewsCount()).isOne());
     }
 
     List<UUID> createComments() {

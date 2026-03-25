@@ -69,6 +69,6 @@ public class VideoServiceTest {
         //then
         Optional<Video> video = videoService.getVideo(id);
         assertThat(video).isPresent();
-        assertThat(video.get()).isEqualTo(new Video(id, file.getName(), initialTitle, "test", 123L, uploadDatetime));
+        assertThat(video.get()).isEqualTo(new Video(id, file.getName(), initialTitle, "test", 123L, uploadDatetime, 0));
     }
 }

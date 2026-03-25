@@ -196,4 +196,12 @@ public class InMemoryVideoRepository implements VideoRepository {
     public Optional<VideoEntity> findByFilename(String filename) {
         return videos.values().stream().filter(v -> v.getFilename().equals(filename)).findFirst();
     }
+
+    @Override
+    public void saveView(UUID videoId) {
+        videos.computeIfPresent(videoId, (uuid, videoEntity) -> {
+            videoEntity.setViewsCount(videoEntity.getViewsCount() + 1);
+            return videoEntity;
+        });
+    }
 }

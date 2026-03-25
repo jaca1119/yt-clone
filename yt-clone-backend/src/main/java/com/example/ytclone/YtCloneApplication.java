@@ -113,7 +113,7 @@ public class YtCloneApplication implements ApplicationRunner {
                                 pb.start();
 
                                 log.info("Saving initial video file: {}", file.getFileName());
-                                return new VideoEntity(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, "System", videoDuration.getSeconds(), null, LocalDateTime.now());
+                                return new VideoEntity(UUID.randomUUID(), file.getFileName().toString(), filenameWithoutExtension, "System", videoDuration.getSeconds(), null, LocalDateTime.now(), 0);
                             }
                         } catch (Exception e) {
                             //skip when exception, filter later

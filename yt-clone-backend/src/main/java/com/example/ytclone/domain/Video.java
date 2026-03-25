@@ -15,4 +15,5 @@ public class Video {
     private String creator;
     private Long length;
     private LocalDateTime uploadDate;
+    private long viewsCount;
 }

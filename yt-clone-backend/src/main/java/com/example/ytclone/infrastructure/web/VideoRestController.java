@@ -124,4 +124,10 @@ public class VideoRestController {
         log.info("Get newest comments for video: {}, offset: {}, duration: {}", videoId, offset, Duration.between(start, Instant.now()));
         return ResponseEntity.ok(newestCommentsForVideo);
     }
+
+    @PostMapping("/{videoId}/views")
+    public ResponseEntity trackView(@PathVariable UUID videoId) {
+        videoService.trackView(videoId);
+        return ResponseEntity.noContent().build();
+    }
 }

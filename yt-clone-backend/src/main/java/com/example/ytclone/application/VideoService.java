@@ -65,7 +65,7 @@ public class VideoService {
     @Transactional
     public UUID startVideoUpload(String title, String user, LocalDateTime uploadTime) {
         UUID id = UUID.randomUUID();
-        videoRepository.save(new VideoEntity(id, null, title, user, null, null, uploadTime));
+        videoRepository.save(new VideoEntity(id, null, title, user, null, null, uploadTime, 0));
         return id;
     }
 
@@ -164,10 +164,16 @@ public class VideoService {
     }
 
     private Video toVideo(VideoEntity videoEntity) {
-        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate());
+        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate(), videoEntity.getViewsCount());
     }
 
     private Comment toComment(CommentEntity commentEntity) {
         return new Comment(commentEntity.getId(), commentEntity.getContent(), commentEntity.getLikes(), commentEntity.getDislikes(), commentEntity.getCreatedBy(), commentEntity.getCreatedAt());
+    }
+
+    @Transactional
+    public void trackView(UUID videoId) {
+        //naive implementation
+        videoRepository.saveView(videoId);
     }
 }
