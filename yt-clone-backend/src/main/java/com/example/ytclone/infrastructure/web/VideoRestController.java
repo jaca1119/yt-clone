@@ -2,6 +2,7 @@ package com.example.ytclone.infrastructure.web;
 
 import com.example.ytclone.application.VideoService;
 import com.example.ytclone.domain.Video;
+import com.example.ytclone.infrastructure.web.dto.*;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.FileSystemResource;

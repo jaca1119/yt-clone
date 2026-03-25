@@ -1,4 +1,4 @@
-package com.example.ytclone.infrastructure.web;
+package com.example.ytclone.infrastructure.web.dto;
 
 import java.util.Optional;
 
