@@ -18,6 +18,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -116,7 +118,9 @@ public class VideoRestController {
 
     @GetMapping("/{videoId}/comments/newest")
     public ResponseEntity<List<Comment>> getNewestComments(@PathVariable UUID videoId, @RequestParam Optional<Long> offset) {
+        Instant start = Instant.now();
         List<Comment> newestCommentsForVideo = videoService.getNewestCommentsForVideo(videoId, offset.orElse(0L));
+        log.info("Get newest comments for video: {}, offset: {}, duration: {}", videoId, offset, Duration.between(start, Instant.now()));
         return ResponseEntity.ok(newestCommentsForVideo);
     }
 }

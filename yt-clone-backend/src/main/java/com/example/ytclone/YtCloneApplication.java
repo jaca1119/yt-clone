@@ -1,11 +1,13 @@
 package com.example.ytclone;
 
+import com.example.ytclone.infrastructure.persistence.CommentEntity;
+import com.example.ytclone.infrastructure.persistence.CommentRepository;
 import com.example.ytclone.infrastructure.persistence.VideoEntity;
 import com.example.ytclone.infrastructure.persistence.VideoRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import tools.jackson.databind.JsonNode;
@@ -17,6 +19,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
@@ -25,9 +28,11 @@ import java.util.stream.Stream;
 
 @Slf4j
 @SpringBootApplication
-public class YtCloneApplication implements CommandLineRunner {
+public class YtCloneApplication implements ApplicationRunner {
     @Autowired
     VideoRepository videoRepository;
+    @Autowired
+    CommentRepository commentRepository;
     @Autowired
     ObjectMapper objectMapper;
 
@@ -36,16 +41,17 @@ public class YtCloneApplication implements CommandLineRunner {
     }
 
     @Override
-    public void run(String @NonNull ... args) throws Exception {
+    public void run(ApplicationArguments args) throws Exception {
         //setup initial dirs
         Path videosDir = Path.of("videos");
         Files.createDirectories(videosDir);
         Files.createDirectories(Path.of("videos/thumbnails"));
 
+        log.info("Args: {}, source: {}", args, Arrays.toString(args.getSourceArgs()));
+
         //generate videos if argument provided
-        log.info("Program arguments: {}", Arrays.toString(args));
-        if (args.length > 0 && args[0].equals("--generate")) {
-            int numOfVideosToGenerate = Integer.parseInt(args[1]);
+        if (args.containsOption("generate") && !args.getOptionValues("generate").isEmpty()) {
+            int numOfVideosToGenerate = Integer.parseInt(args.getOptionValues("generate").getFirst());
             List<Future<Integer>> futures = new ArrayList<>();
             try (ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor()) {
                 for (int i = 1; i <= numOfVideosToGenerate; i++) {
@@ -117,6 +123,22 @@ public class YtCloneApplication implements CommandLineRunner {
                     .collect(Collectors.toCollection(ArrayList::new));
 
             videoRepository.saveAll(videos);
+        }
+
+        //Add comments
+        if (args.containsOption("comments") && !args.getOptionValues("comments").isEmpty()) {
+            int numOfComments = Integer.parseInt(args.getOptionValues("comments").getFirst());
+            log.info("Adding: {} comments for each video", numOfComments);
+            Instant start = Instant.now();
+            List<VideoEntity> allVideos = videoRepository.findAll();
+            log.info("Get all videos duration: {}", Duration.between(start, Instant.now()));
+            start = Instant.now();
+            allVideos.forEach(v -> {
+                for (int i = 0; i < numOfComments; i++) {
+                    commentRepository.save(new CommentEntity(UUID.randomUUID(), "Test content " + i, v, null, 0, 0, LocalDateTime.now(), "system"));
+                }
+            });
+            log.info("Save all comments duration: {}", Duration.between(start, Instant.now()));
         }
     }
 }
