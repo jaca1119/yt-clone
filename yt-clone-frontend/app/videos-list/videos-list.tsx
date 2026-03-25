@@ -23,27 +23,17 @@ export function VideosList({
               <div className="w-16 h-4 m-1 animate-pulse bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-800"></div>
             </div>
           ))
-        : videos.map(({ id, title, length, uploadDate, creator }) => (
-            <Link
-              to={`/video/${id}`}
-              key={id}
-              state={{
-                id: id,
-                title: title,
-                length: length,
-                uploadDate: uploadDate,
-                creator: creator,
-              }}
-            >
+        : videos.map((video) => (
+            <Link to={`/video/${video.id}`} key={video.id} state={video}>
               <div className="w-105">
                 <Thumbnail
                   className="aspect-video"
-                  videoId={id}
+                  videoId={video.id}
                   length={length}
                 ></Thumbnail>
-                <div>{title}</div>
-                <div>{dayjs(uploadDate).fromNow()}</div>
-                <div>Uploaded by: {creator} </div>
+                <div>{video.title}</div>
+                <div>{dayjs(video.uploadDate).fromNow()}</div>
+                <div>Uploaded by: {video.creator} </div>
               </div>
             </Link>
           ))}

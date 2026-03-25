@@ -7,6 +7,7 @@ import {
   type Comment,
   getVideoComments,
   getVideoMetadata,
+  trackView,
   type Video,
 } from "~/scripts/api";
 import dayjs from "dayjs";
@@ -47,6 +48,8 @@ export default function Video({ params }: Route.ComponentProps) {
       setHasNext(comments.hasNext);
     }
 
+    trackView(params.id);
+
     if (!video) {
       fetchVideoMetadata();
     }
@@ -77,6 +80,7 @@ export default function Video({ params }: Route.ComponentProps) {
             <p className="text-2xl font-bold">{video.title}</p>
             <p>Uploaded: {dayjs(video.uploadDate).format("LL")}</p>
             <p>By: {video.creator}</p>
+            <p>Views: {video.viewsCount}</p>
           </div>
         </>
       )}

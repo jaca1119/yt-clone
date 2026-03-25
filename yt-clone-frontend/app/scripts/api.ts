@@ -7,6 +7,7 @@ export interface Video {
   length: number;
   uploadDate: string;
   creator: string;
+  viewsCount: number;
 }
 
 export interface UploadVideoResponse {
@@ -127,4 +128,8 @@ export async function addComment(videoId: string, comment: string) {
   );
 
   return res.data;
+}
+
+export async function trackView(videoId: string) {
+  return await axios.post(`http://localhost:8080/videos/${videoId}/views`);
 }
