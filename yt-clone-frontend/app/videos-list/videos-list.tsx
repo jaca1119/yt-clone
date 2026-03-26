@@ -17,11 +17,18 @@ export function VideosList({
     <div className="grid grid-cols-[repeat(auto-fill,minmax(420px,1fr))] gap-6  w-8/10">
       {isLoading || !videos
         ? [...Array(5).keys()].map((i) => (
-            <div key={i}>
-              <div className="w-105 aspect-video animate-pulse bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-800"></div>
-              <div className="w-28 h-4 m-1 animate-pulse bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-800"></div>
-              <div className="w-20 h-4 m-1 animate-pulse bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-800"></div>
-              <div className="w-16 h-4 m-1 animate-pulse bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 dark:from-gray-800"></div>
+            <div key={i} className="w-105">
+              <div className="shadow-panel rounded-lg aspect-video">
+                <Skeleton className="h-full"></Skeleton>
+              </div>
+              <div className="flex mt-1.5">
+                <Skeleton className="h-10 w-10 shrink-0 rounded-full"></Skeleton>
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3 w-36 rounded-lg" />
+                  <Skeleton className="h-3 w-24 rounded-lg" />
+                  <Skeleton className="h-3 w-24 rounded-lg" />
+                </div>
+              </div>
             </div>
           ))
         : videos.map((video) => (
