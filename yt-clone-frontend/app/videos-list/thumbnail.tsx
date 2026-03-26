@@ -8,7 +8,7 @@ export default function Thumbnail({
   length: number;
 }) {
   return (
-    <div className={"relative " + (className || "")}>
+    <div className={"flex relative " + (className || "")}>
       <img
         className="m-auto"
         src={`http://localhost:8080/videos/${videoId}/thumbnail`}

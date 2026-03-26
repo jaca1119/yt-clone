@@ -27,7 +27,7 @@ export function VideosList({
             <Link to={`/video/${video.id}`} key={video.id} state={video}>
               <div className="w-105">
                 <Thumbnail
-                  className="aspect-video"
+                  className="aspect-video bg-black rounded-lg overflow-hidden"
                   videoId={video.id}
                   length={video.length}
                 ></Thumbnail>
