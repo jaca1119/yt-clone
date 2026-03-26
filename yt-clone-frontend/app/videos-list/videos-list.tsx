@@ -29,7 +29,7 @@ export function VideosList({
                 <Thumbnail
                   className="aspect-video"
                   videoId={video.id}
-                  length={length}
+                  length={video.length}
                 ></Thumbnail>
                 <div>{video.title}</div>
                 <div>{dayjs(video.uploadDate).fromNow()}</div>
