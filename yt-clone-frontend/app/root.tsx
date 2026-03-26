@@ -6,6 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { Button } from "@heroui/react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -59,26 +60,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="flex gap-1 items-center">
                 {isAuthenticated ? (
                   <>
-                    <button
-                      className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </button>
-                    <Link className="ml-3" to="/upload">
+                    <Link className="button button--primary" to="/upload">
                       Upload
                     </Link>
-                    <Link className="ml-3" to="/manage">
+                    <Link className="button button--secondary" to="/manage">
                       Manage
                     </Link>
+                    <Button variant="secondary" onClick={handleLogout}>
+                      Logout
+                    </Button>
                   </>
                 ) : (
-                  <button
-                    className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-                    onClick={redirectToOauth2Authorization}
-                  >
-                    Login
-                  </button>
+                  <Button onClick={redirectToOauth2Authorization}>Login</Button>
                 )}
               </div>
             </div>
