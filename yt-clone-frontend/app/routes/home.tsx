@@ -4,8 +4,8 @@ import { getAllVideos } from "~/scripts/api";
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: "Yt-clone" },
+    { name: "description", content: "Welcome to yt-clone!" },
   ];
 }
 

@@ -3,6 +3,7 @@ import type { Video } from "~/scripts/api";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
 import Thumbnail from "./thumbnail";
+import { Avatar, Skeleton } from "@heroui/react";
 dayjs.extend(RelativeTime);
 
 export function VideosList({
@@ -31,9 +32,21 @@ export function VideosList({
                   videoId={video.id}
                   length={video.length}
                 ></Thumbnail>
-                <div>{video.title}</div>
-                <div>{dayjs(video.uploadDate).fromNow()}</div>
-                <div>Uploaded by: {video.creator} </div>
+                <div className="flex gap-3 mt-1.5">
+                  <Avatar>
+                    <Avatar.Fallback>{video.creator.at(0)}</Avatar.Fallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold">{video.title}</p>
+                    <div className="text-sm text-gray-600">
+                      <p>{video.creator}</p>
+                      <p>
+                        <span>{video.viewsCount} views </span> -
+                        <span> {dayjs(video.uploadDate).fromNow()}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </Link>
           ))}
