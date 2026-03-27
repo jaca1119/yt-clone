@@ -10,13 +10,10 @@ import { Button } from "@heroui/react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
-import {
-  isLoggedin,
-  logout,
-  redirectToOauth2Authorization,
-} from "./scripts/auth";
 import { Link } from "react-router";
 import { useEffect, useState } from "react";
+import { AuthProvider, useAuth } from "react-oidc-context";
+import type { User, UserManagerSettings } from "oidc-client-ts";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -31,17 +28,13 @@ export const links: Route.LinksFunction = () => [
   },
 ];
 
+const oidcConfig: UserManagerSettings = {
+  authority: "http://localhost:9090",
+  client_id: "react-spa",
+  redirect_uri: "http://localhost:5173/callback",
+};
+
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setAuthenticated] = useState(false);
-  useEffect(() => {
-    setAuthenticated(isLoggedin());
-  });
-
-  function handleLogout() {
-    logout();
-    setAuthenticated(false);
-  }
-
   return (
     <html lang="en">
       <head>
@@ -53,28 +46,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <body>
         <main className="flex items-center justify-center pt-16 pb-4">
           <div className="flex-1 flex flex-col items-center gap-16 min-h-0">
-            <div className="flex w-3/4 flex-row items-start justify-between justify-items-start">
-              <Link to="/" className="font-bold text-2xl self-baseline">
-                YT-clone
-              </Link>
-              <div className="flex gap-1 items-center">
-                {isAuthenticated ? (
-                  <>
-                    <Link className="button button--primary" to="/upload">
-                      Upload
-                    </Link>
-                    <Link className="button button--secondary" to="/manage">
-                      Manage
-                    </Link>
-                    <Button variant="secondary" onClick={handleLogout}>
-                      Logout
-                    </Button>
-                  </>
-                ) : (
-                  <Button onClick={redirectToOauth2Authorization}>Login</Button>
-                )}
-              </div>
-            </div>
             {children}
           </div>
         </main>
@@ -85,8 +56,46 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+const onSigninCallback = (_user: User | undefined): void => {
+  window.history.replaceState({}, document.title, window.location.pathname);
+  window.location.href = "/";
+};
+
 export default function App() {
-  return <Outlet />;
+  return (
+    <AuthProvider {...oidcConfig} onSigninCallback={onSigninCallback}>
+      <Nav></Nav>
+      <Outlet />
+    </AuthProvider>
+  );
+}
+
+function Nav() {
+  const auth = useAuth();
+  return (
+    <div className="flex w-3/4 flex-row items-start justify-between justify-items-start">
+      <Link to="/" className="font-bold text-2xl self-baseline">
+        YT-clone
+      </Link>
+      <div className="flex gap-1 items-center">
+        {auth.isAuthenticated ? (
+          <>
+            <Link className="button button--primary" to="/upload">
+              Upload
+            </Link>
+            <Link className="button button--secondary" to="/manage">
+              Manage
+            </Link>
+            <Button variant="secondary" onClick={() => void auth.removeUser()}>
+              Logout
+            </Button>
+          </>
+        ) : (
+          <Button onClick={() => void auth.signinRedirect()}>Login</Button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

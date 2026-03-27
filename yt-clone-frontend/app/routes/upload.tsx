@@ -1,6 +1,4 @@
-import axios from "axios";
 import { useState } from "react";
-import { getAccessToken } from "~/scripts/auth";
 import type { Route } from "./+types/upload";
 import { useFetcher } from "react-router";
 import { startVideoUpload, updateVideo, uploadVideo } from "~/scripts/api";
