@@ -13,6 +13,7 @@ import {
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
 import { useFetcher } from "react-router";
+import { Avatar, Button, Label, TextArea } from "@heroui/react";
 dayjs.extend(LocalizedFormat);
 dayjs.extend(RelativeTime);
 
@@ -33,6 +34,7 @@ export default function Video({ params }: Route.ComponentProps) {
   const [video, setVideo] = useState<Video | null>(location.state);
   const [comments, setComments] = useState<Comment[] | null>();
   const [hasNext, setHasNext] = useState(false);
+  const [shouldShowControls, setShowControls] = useState(false);
 
   let currentOffset = 0;
 
@@ -67,50 +69,73 @@ export default function Video({ params }: Route.ComponentProps) {
     });
   }
 
+  function showControls() {
+    setShowControls(true);
+  }
+
   return (
-    <div className="flex flex-col m-auto items-center w-5xl">
+    <div className="flex flex-col m-auto items-center w-full">
       {!!video && (
         <>
           <video
+            className="w-full h-180"
             controls
             src={`http://localhost:8080/videos/${params.id}`}
             poster={`http://localhost:8080/videos/${params.id}/thumbnail`}
           ></video>
-          <div className="self-start">
-            <p className="text-2xl font-bold">{video.title}</p>
-            <p>Uploaded: {dayjs(video.uploadDate).format("LL")}</p>
-            <p>By: {video.creator}</p>
-            <p>Views: {video.viewsCount}</p>
+          <div className="self-start pl-10">
+            <p className="font-bold text-2xl">{video.title}</p>
+
+            <div className="flex gap-3 pt-1">
+              <Avatar>
+                <Avatar.Fallback>{video.creator.at(0)}</Avatar.Fallback>
+              </Avatar>
+              <div>
+                <p className="font-bold">{video.creator}</p>
+                <p>
+                  <span>{video.viewsCount} views </span> -
+                  <span> {dayjs(video.uploadDate).fromNow()}</span>
+                </p>
+              </div>
+            </div>
+            <div className="self-start">
+              <fetcher.Form method="POST" className="flex flex-col gap-2">
+                {video && (
+                  <input type="hidden" name="videoId" value={video.id}></input>
+                )}
+                <Label htmlFor="comment">Add comment:</Label>
+                <TextArea
+                  id="comment"
+                  onFocus={showControls}
+                  name="comment"
+                ></TextArea>
+                {shouldShowControls && (
+                  <Button className="self-end" type="submit">
+                    Add
+                  </Button>
+                )}
+              </fetcher.Form>
+              <p className="font-bold text-xl">Comments</p>
+              <div>
+                {comments &&
+                  comments.map((c) => (
+                    <div key={c.id}>
+                      <p>
+                        {c.content} by {c.createdBy} at:{" "}
+                        {dayjs(c.createdAt).fromNow()}
+                      </p>
+                    </div>
+                  ))}
+                {hasNext && (
+                  <>
+                    <button onClick={showMore}>Show more</button>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </>
       )}
-      <div className="self-start">
-        <fetcher.Form method="POST">
-          {video && (
-            <input type="hidden" name="videoId" value={video.id}></input>
-          )}
-          <label htmlFor="comment">Add comment:</label>
-          <textarea name="comment"></textarea>
-          <button type="submit">Add</button>
-        </fetcher.Form>
-        <p className="font-bold text-xl">Comments</p>
-        <div>
-          {comments &&
-            comments.map((c) => (
-              <div key={c.id}>
-                <p>
-                  {c.content} by {c.createdBy} at:{" "}
-                  {dayjs(c.createdAt).fromNow()}
-                </p>
-              </div>
-            ))}
-          {hasNext && (
-            <>
-              <button onClick={showMore}>Show more</button>
-            </>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

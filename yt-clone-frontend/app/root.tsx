@@ -44,7 +44,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <main className="flex items-center justify-center pt-16 pb-4">
+        <main className="flex items-center justify-center pt-3 pb-4">
           <div className="flex-1 flex flex-col items-center gap-16 min-h-0">
             {children}
           </div>
