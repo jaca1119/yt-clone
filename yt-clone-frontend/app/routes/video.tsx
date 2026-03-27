@@ -83,7 +83,7 @@ export default function Video({ params }: Route.ComponentProps) {
             src={`http://localhost:8080/videos/${params.id}`}
             poster={`http://localhost:8080/videos/${params.id}/thumbnail`}
           ></video>
-          <div className="self-start pl-10">
+          <div className="self-start pl-10 w-1/2">
             <p className="font-bold text-2xl">{video.title}</p>
 
             <div className="flex gap-3 pt-1">
@@ -119,16 +119,28 @@ export default function Video({ params }: Route.ComponentProps) {
               <div>
                 {comments &&
                   comments.map((c) => (
-                    <div key={c.id}>
-                      <p>
-                        {c.content} by {c.createdBy} at:{" "}
-                        {dayjs(c.createdAt).fromNow()}
-                      </p>
+                    <div key={c.id} className="flex gap-2 my-3">
+                      <Avatar>
+                        <Avatar.Fallback>{c.createdBy.at(0)}</Avatar.Fallback>
+                      </Avatar>
+                      <div>
+                        <div>
+                          <p className="text-sm">
+                            <span>{c.createdBy} </span>
+                            <span className="text-gray-500">
+                              {dayjs(c.createdAt).fromNow()}
+                            </span>
+                          </p>
+                        </div>
+                        <p>{c.content}</p>
+                      </div>
                     </div>
                   ))}
                 {hasNext && (
                   <>
-                    <button onClick={showMore}>Show more</button>
+                    <Button onClick={showMore} variant="secondary">
+                      Show more
+                    </Button>
                   </>
                 )}
               </div>
