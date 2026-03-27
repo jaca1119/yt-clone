@@ -14,6 +14,7 @@ import { Link } from "react-router";
 import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "react-oidc-context";
 import type { User, UserManagerSettings } from "oidc-client-ts";
+import { useLocation } from "react-router";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -57,8 +58,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 const onSigninCallback = (_user: User | undefined): void => {
-  window.history.replaceState({}, document.title, window.location.pathname);
-  window.location.href = "/";
+  const returnTo = (_user?.state as { returnTo?: string }).returnTo || "/";
+  window.location.replace(returnTo);
 };
 
 export default function App() {
@@ -72,6 +73,7 @@ export default function App() {
 
 function Nav() {
   const auth = useAuth();
+  const location = useLocation();
   return (
     <div className="flex w-3/4 flex-row items-start justify-between justify-items-start">
       <Link to="/" className="font-bold text-2xl self-baseline">
@@ -91,7 +93,17 @@ function Nav() {
             </Button>
           </>
         ) : (
-          <Button onClick={() => void auth.signinRedirect()}>Login</Button>
+          <Button
+            onClick={() =>
+              void auth.signinRedirect({
+                state: {
+                  returnTo: location.pathname + location.search + location.hash,
+                },
+              })
+            }
+          >
+            Login
+          </Button>
         )}
       </div>
     </div>
