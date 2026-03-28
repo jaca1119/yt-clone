@@ -2,6 +2,8 @@ import Thumbnail from "~/videos-list/thumbnail";
 import type { Route } from "./+types/video-edit";
 import { getVideoMetadata, updateVideo } from "~/scripts/api";
 import { useFetcher } from "react-router";
+import { Button, Input, Label, TextField } from "@heroui/react";
+import { useState } from "react";
 
 export async function clientLoader({ params }: Route.ClientLoaderArgs) {
   return getVideoMetadata(params.videoId);
@@ -22,6 +24,7 @@ export default function VideoEdit({
   loaderData,
 }: Route.ComponentProps) {
   const fetcher = useFetcher();
+  const [title, setTitle] = useState(loaderData.title);
   return (
     <div className="flex gap-5">
       <Thumbnail
@@ -30,17 +33,14 @@ export default function VideoEdit({
       ></Thumbnail>
       <fetcher.Form method="POST" className="flex flex-col items-start gap-2">
         <input type="hidden" name="videoId" value={params.videoId}></input>
-
-        <label htmlFor="title">Title:</label>
-        <input
-          id="title"
-          type="text"
-          name="title"
-          defaultValue={loaderData.title}
-        ></input>
-        <button type="submit">
-          {fetcher.state !== "idle" ? "Saving..." : "Save changes"}
-        </button>
+        <TextField name="title" type="text">
+          <Label>Title:</Label>
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          ></Input>
+        </TextField>
+        <Button type="submit">Save changes</Button>
       </fetcher.Form>
     </div>
   );
