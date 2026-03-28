@@ -2,6 +2,15 @@ import { useState } from "react";
 import type { Route } from "./+types/upload";
 import { useFetcher } from "react-router";
 import { startVideoUpload, updateVideo, uploadVideo } from "~/scripts/api";
+import {
+  Button,
+  FieldGroup,
+  Fieldset,
+  Input,
+  Label,
+  ProgressBar,
+  TextField,
+} from "@heroui/react";
 
 export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
@@ -43,6 +52,24 @@ export default function Upload() {
 
   return (
     <div className="flex gap-5">
+      <div className="flex flex-col">
+        <Label htmlFor="file">Upload .mp4 video</Label>
+        <Input
+          id="file"
+          type="file"
+          accept=".mp4"
+          onChange={handleFileChange}
+        ></Input>
+        {videoId && (
+          <ProgressBar value={percentOfUpload}>
+            <Label>Uploading</Label>
+            <ProgressBar.Output></ProgressBar.Output>
+            <ProgressBar.Track>
+              <ProgressBar.Fill></ProgressBar.Fill>
+            </ProgressBar.Track>
+          </ProgressBar>
+        )}
+      </div>
       <div>
         <fetcher.Form
           method="POST"
@@ -53,24 +80,25 @@ export default function Upload() {
           {videoId && (
             <input type="hidden" name="videoId" value={videoId}></input>
           )}
-          <label htmlFor="title">Title:</label>
-          <input
-            id="title"
-            type="text"
-            name="title"
-            defaultValue={title}
-          ></input>
-          <button type="submit">
-            {fetcher.state !== "idle" ? "Saving..." : "Save changes"}
-          </button>
+          <Fieldset>
+            <Fieldset.Legend>Video details</Fieldset.Legend>
+            <FieldGroup>
+              <TextField name="title" type="text">
+                <Label>Title:</Label>
+                <Input
+                  placeholder="asd"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                ></Input>
+              </TextField>
+            </FieldGroup>
+            <Fieldset.Actions>
+              <Button type="submit">
+                {fetcher.state !== "idle" ? "Saving..." : "Save changes"}
+              </Button>
+            </Fieldset.Actions>
+          </Fieldset>
         </fetcher.Form>
-      </div>
-      <div>
-        <p>Upload .mp4 video</p>
-        <div>
-          <input type="file" accept=".mp4" onChange={handleFileChange} />
-          {videoId && <p>Uploading... {percentOfUpload}%</p>}
-        </div>
       </div>
     </div>
   );
