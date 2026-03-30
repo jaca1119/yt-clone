@@ -1,9 +1,10 @@
 package com.example.ytclone.infrastructure;
 
 import com.example.ytclone.TestcontainersConfiguration;
-import com.example.ytclone.domain.Comment;
 import com.example.ytclone.domain.Video;
+import com.example.ytclone.infrastructure.persistence.CommentDTO;
 import com.example.ytclone.infrastructure.web.dto.*;
+import org.assertj.core.api.Condition;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -417,7 +418,10 @@ public class VideoRestControllerTest {
                 .assertThat()
                 .bodyJson()
                 .convertTo(CommentsPageOffset.class)
-                .satisfies(c -> assertThat(c.comments()).hasSize(1));
+                .satisfies(c -> {
+                    assertThat(c.comments()).hasSize(1);
+                    assertThat(c.comments().getFirst().replyCount()).isEqualTo(2);
+                });
     }
 
     @Test
@@ -439,8 +443,8 @@ public class VideoRestControllerTest {
                 .convertTo(CommentsPageOffset.class)
                 .satisfies(c -> assertThat(c.comments()).hasSize(10))
                 .extracting(CommentsPageOffset::comments)
-                .asInstanceOf(InstanceOfAssertFactories.list(Comment.class))
-                .map(Comment::id)
+                .asInstanceOf(InstanceOfAssertFactories.list(CommentDTO.class))
+                .map(CommentDTO::id)
                 .containsExactly(comments.reversed().stream().limit(10).toArray(UUID[]::new));
 
         //then get next page of latest 10 comments
@@ -450,8 +454,8 @@ public class VideoRestControllerTest {
                 .convertTo(CommentsPageOffset.class)
                 .satisfies(c -> assertThat(c.comments()).hasSize(10))
                 .extracting(CommentsPageOffset::comments)
-                .asInstanceOf(InstanceOfAssertFactories.list(Comment.class))
-                .map(Comment::id)
+                .asInstanceOf(InstanceOfAssertFactories.list(CommentDTO.class))
+                .map(CommentDTO::id)
                 .containsExactly(comments.reversed().stream().skip(10).limit(10).toArray(UUID[]::new));
     }
 
@@ -480,7 +484,7 @@ public class VideoRestControllerTest {
                 .getResponse().getContentAsString(), CommentResponse.class);
 
         //Create different comments with reply
-        List<UUID> comments = createComments();
+        List<UUID> comments = createComments(5);
         mockMvcTester.post().uri("/videos/{id}/comments/{parentId}", videoId, comments.getFirst())
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -488,15 +492,26 @@ public class VideoRestControllerTest {
                 .assertThat()
                 .hasStatus(HttpStatus.CREATED);
 
+        mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(CommentsPageOffset.class)
+                .satisfies(c -> {
+                    assertThat(c.comments()).hasSize(6);
+                    assertThat(c.comments().getLast().replyCount()).isEqualTo(2);
+                    assertThat(c.comments().reversed().stream().skip(1)).haveExactly(1, new Condition<>(commentDTO -> commentDTO.replyCount() == 1, ""));
+                    assertThat(c.comments().reversed().stream().skip(1)).haveExactly(4, new Condition<>(commentDTO -> commentDTO.replyCount() == 0, ""));
+                });
+
         //get replies
         mockMvcTester.get().uri("/videos/{videoId}/comments/{parentId}/newest", videoId, createdComment.commentId())
                 .assertThat()
                 .bodyJson()
                 .convertTo(CommentsPageOffset.class)
-                .satisfies(c -> assertThat(c.comments()).hasSize(2))
+                .satisfies(c -> assertThat(c.comments()).hasSize(2).noneMatch(r -> r.replyCount() != 0))
                 .extracting(CommentsPageOffset::comments)
-                .asInstanceOf(InstanceOfAssertFactories.list(Comment.class))
-                .map(Comment::id)
+                .asInstanceOf(InstanceOfAssertFactories.list(CommentDTO.class))
+                .map(CommentDTO::id)
                 .containsExactly(replyResponse2.commentId(), replyResponse.commentId());
     }
 
@@ -520,9 +535,13 @@ public class VideoRestControllerTest {
     }
 
     List<UUID> createComments() {
+        return createComments(100);
+    }
+
+    List<UUID> createComments(int size) {
         try {
             List<UUID> commentsIds = new ArrayList<>();
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < size; i++) {
                 CommentResponse createdComment = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments", videoId)
                         .with(jwt())
                         .contentType(MediaType.APPLICATION_JSON)

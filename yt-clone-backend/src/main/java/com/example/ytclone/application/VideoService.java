@@ -1,17 +1,10 @@
 package com.example.ytclone.application;
 
-import com.example.ytclone.domain.Comment;
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.media.VideoProcessor;
-import com.example.ytclone.infrastructure.persistence.CommentEntity;
-import com.example.ytclone.infrastructure.persistence.CommentRepository;
-import com.example.ytclone.infrastructure.persistence.VideoEntity;
-import com.example.ytclone.infrastructure.persistence.VideoRepository;
-import com.example.ytclone.infrastructure.web.dto.CommentsPageOffset;
+import com.example.ytclone.infrastructure.persistence.*;
 import com.example.ytclone.infrastructure.web.dto.VideoUpdateDTO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Limit;
-import org.springframework.data.domain.ScrollPosition;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -156,36 +149,25 @@ public class VideoService {
         return save.getId();
     }
 
-    public CommentsPageOffset getNewestCommentsForVideo(UUID videoId, long offset) {
+    public List<CommentDTO> getNewestCommentsForVideo(UUID videoId, long offset) {
         return videoRepository.findById(videoId)
-                .map(v -> {
-                    List<Comment> comments = commentRepository.findTop10ByVideoOffset(v, offset).stream().map(this::toComment).toList();
-                    return new CommentsPageOffset(comments, comments.size() == 10);
-                })
+                .map(v -> commentRepository.findTop10ByVideoOffsetWithReplyCount(v, offset))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
-    public CommentsPageOffset getNewestRepliesForComment(UUID videoId, UUID parentId, long offset) {
+    public List<CommentDTO> getNewestRepliesForComment(UUID videoId, UUID parentId, long offset) {
         //TODO could be rewritten to single select for comments with ids instead of multiple selects for entities
         VideoEntity videoEntity = videoRepository.findById(videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        CommentEntity parent = commentRepository.findById(parentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        List<Comment> comments = commentRepository.findByVideoAndParentOrderByCreatedAtDesc(videoEntity, parent, Limit.of(10), offset == 0 ? ScrollPosition.offset() : ScrollPosition.offset(offset))
-                .stream().map(this::toComment).toList();
-        return new CommentsPageOffset(comments, comments.size() == 10);
+        return commentRepository.findByVideoAndParentOrderByCreatedAtDesc(videoEntity, parentId, offset);
     }
 
     private Video toVideo(VideoEntity videoEntity) {
         return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate(), videoEntity.getViewsCount());
     }
 
-    private Comment toComment(CommentEntity commentEntity) {
-        return new Comment(commentEntity.getId(), commentEntity.getContent(), commentEntity.getLikes(), commentEntity.getDislikes(), commentEntity.getCreatedBy(), commentEntity.getCreatedAt());
-    }
-
     @Transactional
     public void trackView(UUID videoId) {
-        //naive implementation
+        //naive implementation, async would be better
         videoRepository.saveView(videoId);
     }
 }

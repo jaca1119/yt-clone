@@ -2,6 +2,7 @@ package com.example.ytclone.infrastructure.web;
 
 import com.example.ytclone.application.VideoService;
 import com.example.ytclone.domain.Video;
+import com.example.ytclone.infrastructure.persistence.CommentDTO;
 import com.example.ytclone.infrastructure.web.dto.*;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -120,17 +121,17 @@ public class VideoRestController {
     @GetMapping("/{videoId}/comments/newest")
     public ResponseEntity<CommentsPageOffset> getNewestComments(@PathVariable UUID videoId, @RequestParam Optional<Long> offset) {
         Instant start = Instant.now();
-        CommentsPageOffset newestCommentsForVideo = videoService.getNewestCommentsForVideo(videoId, offset.orElse(0L));
+        List<CommentDTO> comments = videoService.getNewestCommentsForVideo(videoId, offset.orElse(0L));
         log.info("Get newest comments for video: {}, offset: {}, duration: {}", videoId, offset, Duration.between(start, Instant.now()));
-        return ResponseEntity.ok(newestCommentsForVideo);
+        return ResponseEntity.ok(new CommentsPageOffset(comments, comments.size() == 10));
     }
 
     @GetMapping("/{videoId}/comments/{parentId}/newest")
     public ResponseEntity<CommentsPageOffset> getNewestCommentReplies(@PathVariable UUID videoId, @PathVariable UUID parentId, @RequestParam Optional<Long> offset) {
         Instant start = Instant.now();
-        CommentsPageOffset newestCommentsForVideo = videoService.getNewestRepliesForComment(videoId, parentId, offset.orElse(0L));
+        List<CommentDTO> comments = videoService.getNewestRepliesForComment(videoId, parentId, offset.orElse(0L));
         log.info("Get newest replies for video: {}, parent: {}, offset: {}, duration: {}", videoId, parentId, offset, Duration.between(start, Instant.now()));
-        return ResponseEntity.ok(newestCommentsForVideo);
+        return ResponseEntity.ok(new CommentsPageOffset(comments, comments.size() == 10));
     }
 
     @PostMapping("/{videoId}/views")
