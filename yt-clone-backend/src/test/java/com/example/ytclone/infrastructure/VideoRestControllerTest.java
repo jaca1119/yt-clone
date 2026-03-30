@@ -381,7 +381,7 @@ public class VideoRestControllerTest {
     }
 
     @Test
-    void shouldAddCommentToVideo() throws UnsupportedEncodingException {
+    void shouldAddCommentToVideoAndReplyToComment() throws UnsupportedEncodingException {
         CommentResponse createdComment = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments", videoId)
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -399,9 +399,19 @@ public class VideoRestControllerTest {
                 .exchange()
                 .getResponse().getContentAsString(), CommentResponse.class);
 
+        CommentResponse responseComment2 = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments/{parentId}", videoId, createdComment.commentId())
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new CommentRequest("Test response 2 to comment")))
+                .exchange()
+                .getResponse().getContentAsString(), CommentResponse.class);
+
         assertThat(responseComment).isNotNull();
         assertThat(responseComment.commentId()).isNotNull();
         assertThat(responseComment.commentId()).isNotEqualTo(createdComment.commentId());
+        assertThat(responseComment2).isNotNull();
+        assertThat(responseComment2.commentId()).isNotNull();
+        assertThat(responseComment2.commentId()).isNotEqualTo(createdComment.commentId());
 
         mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
                 .assertThat()

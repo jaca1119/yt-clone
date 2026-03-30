@@ -21,7 +21,7 @@ public class CommentEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private VideoEntity video;
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private CommentEntity parent;
     private int likes;
     private int dislikes;
