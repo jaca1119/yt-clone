@@ -456,6 +456,51 @@ public class VideoRestControllerTest {
     }
 
     @Test
+    void shouldGetCommentReplies() throws UnsupportedEncodingException {
+        //Create comment
+        CommentResponse createdComment = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments", videoId)
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new CommentRequest("Test comment")))
+                .exchange()
+                .getResponse().getContentAsString(), CommentResponse.class);
+
+        //add replies
+        CommentResponse replyResponse = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments/{parentId}", videoId, createdComment.commentId())
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new CommentRequest("Test response to comment")))
+                .exchange()
+                .getResponse().getContentAsString(), CommentResponse.class);
+        CommentResponse replyResponse2 = objectMapper.readValue(mockMvcTester.post().uri("/videos/{id}/comments/{parentId}", videoId, createdComment.commentId())
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new CommentRequest("Test response 2 to comment")))
+                .exchange()
+                .getResponse().getContentAsString(), CommentResponse.class);
+
+        //Create different comments with reply
+        List<UUID> comments = createComments();
+        mockMvcTester.post().uri("/videos/{id}/comments/{parentId}", videoId, comments.getFirst())
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new CommentRequest("Test response to comment")))
+                .assertThat()
+                .hasStatus(HttpStatus.CREATED);
+
+        //get replies
+        mockMvcTester.get().uri("/videos/{videoId}/comments/{parentId}/newest", videoId, createdComment.commentId())
+                .assertThat()
+                .bodyJson()
+                .convertTo(CommentsPageOffset.class)
+                .satisfies(c -> assertThat(c.comments()).hasSize(2))
+                .extracting(CommentsPageOffset::comments)
+                .asInstanceOf(InstanceOfAssertFactories.list(Comment.class))
+                .map(Comment::id)
+                .containsExactly(replyResponse2.commentId(), replyResponse.commentId());
+    }
+
+    @Test
     void shouldTrackVideoView() {
         mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
                 .assertThat()

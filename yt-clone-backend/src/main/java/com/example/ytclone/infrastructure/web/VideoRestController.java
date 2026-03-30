@@ -125,6 +125,14 @@ public class VideoRestController {
         return ResponseEntity.ok(newestCommentsForVideo);
     }
 
+    @GetMapping("/{videoId}/comments/{parentId}/newest")
+    public ResponseEntity<CommentsPageOffset> getNewestCommentReplies(@PathVariable UUID videoId, @PathVariable UUID parentId, @RequestParam Optional<Long> offset) {
+        Instant start = Instant.now();
+        CommentsPageOffset newestCommentsForVideo = videoService.getNewestRepliesForComment(videoId, parentId, offset.orElse(0L));
+        log.info("Get newest replies for video: {}, parent: {}, offset: {}, duration: {}", videoId, parentId, offset, Duration.between(start, Instant.now()));
+        return ResponseEntity.ok(newestCommentsForVideo);
+    }
+
     @PostMapping("/{videoId}/views")
     public ResponseEntity trackView(@PathVariable UUID videoId) {
         videoService.trackView(videoId);

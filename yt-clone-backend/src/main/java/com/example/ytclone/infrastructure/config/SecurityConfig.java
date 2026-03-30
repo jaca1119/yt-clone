@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/videos").permitAll()
                         .requestMatchers(HttpMethod.GET, "/videos/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/videos/{id}/comments/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/videos/{id}/comments/*/newest").permitAll()
                         .requestMatchers(HttpMethod.POST, "/videos/{id}/views").permitAll()
                         .requestMatchers("/videos/*/thumbnail").permitAll()
                         .requestMatchers("/videos/*/metadata").permitAll()

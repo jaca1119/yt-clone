@@ -1,5 +1,7 @@
 package com.example.ytclone.infrastructure.persistence;
 
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.OffsetScrollPosition;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -10,4 +12,6 @@ public interface CommentRepository extends JpaRepository<CommentEntity, UUID> {
 
     @Query("select ce from CommentEntity ce where ce.video = :video and ce.parent is null order by ce.createdAt desc limit 10 offset :offset")
     List<CommentEntity> findTop10ByVideoOffset(VideoEntity video, long offset);
+
+    List<CommentEntity> findByVideoAndParentOrderByCreatedAtDesc(VideoEntity video, CommentEntity parent, Limit limit, OffsetScrollPosition scrollPosition);
 }

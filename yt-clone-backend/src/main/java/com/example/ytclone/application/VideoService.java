@@ -10,6 +10,8 @@ import com.example.ytclone.infrastructure.persistence.VideoRepository;
 import com.example.ytclone.infrastructure.web.dto.CommentsPageOffset;
 import com.example.ytclone.infrastructure.web.dto.VideoUpdateDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Limit;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -161,6 +163,16 @@ public class VideoService {
                     return new CommentsPageOffset(comments, comments.size() == 10);
                 })
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    public CommentsPageOffset getNewestRepliesForComment(UUID videoId, UUID parentId, long offset) {
+        //TODO could be rewritten to single select for comments with ids instead of multiple selects for entities
+        VideoEntity videoEntity = videoRepository.findById(videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        CommentEntity parent = commentRepository.findById(parentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        List<Comment> comments = commentRepository.findByVideoAndParentOrderByCreatedAtDesc(videoEntity, parent, Limit.of(10), offset == 0 ? ScrollPosition.offset() : ScrollPosition.offset(offset))
+                .stream().map(this::toComment).toList();
+        return new CommentsPageOffset(comments, comments.size() == 10);
     }
 
     private Video toVideo(VideoEntity videoEntity) {
