@@ -15,7 +15,7 @@ export interface UploadVideoResponse {
 }
 
 export interface Comment {
-  id: number;
+  id: string;
   content: string;
   createdAt: string;
   createdBy: string;
@@ -114,9 +114,14 @@ export async function getVideoComments(videoId: string, offset?: number) {
   return res.data;
 }
 
-export async function addComment(videoId: string, comment: string) {
+export async function addComment(
+  videoId: string,
+  comment: string,
+  replyId: string | null,
+) {
+  const reply = replyId ? `/${replyId}` : "";
   const res = await axios.post<CommentResponse>(
-    `http://localhost:8080/videos/${videoId}/comments`,
+    `http://localhost:8080/videos/${videoId}/comments${reply}`,
     {
       comment: comment,
     },

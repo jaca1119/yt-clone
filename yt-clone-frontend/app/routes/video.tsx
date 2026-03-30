@@ -14,6 +14,7 @@ import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
 import { useFetcher } from "react-router";
 import { Avatar, Button, Label, TextArea } from "@heroui/react";
+import AddComment from "~/components/add-comment";
 dayjs.extend(LocalizedFormat);
 dayjs.extend(RelativeTime);
 
@@ -21,8 +22,9 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   const formData = await request.formData();
   const videoId = formData.get("videoId") as string;
   const comment = formData.get("comment") as string;
+  const replyId = formData.get("replyId") as string | null;
 
-  await addComment(videoId, comment);
+  await addComment(videoId, comment, replyId);
 
   return { ok: true };
 }
@@ -35,6 +37,7 @@ export default function Video({ params }: Route.ComponentProps) {
   const [comments, setComments] = useState<Comment[] | null>();
   const [hasNext, setHasNext] = useState(false);
   const [shouldShowControls, setShowControls] = useState(false);
+  const [replyId, setReplyId] = useState<string | undefined>();
 
   let currentOffset = 0;
 
@@ -99,22 +102,22 @@ export default function Video({ params }: Route.ComponentProps) {
               </div>
             </div>
             <div className="self-start">
-              <fetcher.Form method="POST" className="flex flex-col gap-2">
-                {video && (
-                  <input type="hidden" name="videoId" value={video.id}></input>
-                )}
-                <Label htmlFor="comment">Add comment:</Label>
-                <TextArea
-                  id="comment"
-                  onFocus={showControls}
-                  name="comment"
-                ></TextArea>
-                {shouldShowControls && (
-                  <Button className="self-end" type="submit">
-                    Add
-                  </Button>
-                )}
-              </fetcher.Form>
+              <AddComment videoId={video.id}></AddComment>
+              {video && (
+                <input type="hidden" name="videoId" value={video.id}></input>
+              )}
+              <Label htmlFor="comment">Add comment:</Label>
+              <TextArea
+                id="comment"
+                onFocus={showControls}
+                name="comment"
+              ></TextArea>
+              {shouldShowControls && (
+                <Button className="self-end" type="submit">
+                  Add
+                </Button>
+              )}
+
               <p className="font-bold text-xl">Comments</p>
               <div>
                 {comments &&
@@ -132,7 +135,21 @@ export default function Video({ params }: Route.ComponentProps) {
                             </span>
                           </p>
                         </div>
-                        <p>{c.content}</p>
+                        <div>
+                          <p>{c.content}</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setReplyId(c.id)}
+                          >
+                            Reply
+                          </Button>
+                          {replyId === c.id && (
+                            <AddComment videoId={video.id} replyId={c.id}>
+                              Add reply:
+                            </AddComment>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
