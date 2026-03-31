@@ -12,8 +12,7 @@ import {
 } from "~/scripts/api";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
-import { useFetcher } from "react-router";
-import { Avatar, Button, Label, TextArea } from "@heroui/react";
+import { Avatar, Button } from "@heroui/react";
 import AddComment from "~/components/add-comment";
 dayjs.extend(LocalizedFormat);
 dayjs.extend(RelativeTime);
@@ -31,12 +30,10 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
 export default function Video({ params }: Route.ComponentProps) {
   const location = useLocation();
-  const fetcher = useFetcher();
 
   const [video, setVideo] = useState<Video | null>(location.state);
   const [comments, setComments] = useState<Comment[] | null>();
   const [hasNext, setHasNext] = useState(false);
-  const [shouldShowControls, setShowControls] = useState(false);
   const [replyId, setReplyId] = useState<string | undefined>();
 
   let currentOffset = 0;
@@ -71,11 +68,6 @@ export default function Video({ params }: Route.ComponentProps) {
       }
     });
   }
-
-  function showControls() {
-    setShowControls(true);
-  }
-
   return (
     <div className="flex flex-col m-auto items-center w-full">
       {!!video && (
@@ -103,21 +95,6 @@ export default function Video({ params }: Route.ComponentProps) {
             </div>
             <div className="self-start">
               <AddComment videoId={video.id}></AddComment>
-              {video && (
-                <input type="hidden" name="videoId" value={video.id}></input>
-              )}
-              <Label htmlFor="comment">Add comment:</Label>
-              <TextArea
-                id="comment"
-                onFocus={showControls}
-                name="comment"
-              ></TextArea>
-              {shouldShowControls && (
-                <Button className="self-end" type="submit">
-                  Add
-                </Button>
-              )}
-
               <p className="font-bold text-xl">Comments</p>
               <div>
                 {comments &&
