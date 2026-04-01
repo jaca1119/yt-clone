@@ -32,7 +32,7 @@ export function VideosList({
             </div>
           ))
         : videos.map((video) => (
-            <Link to={`/video/${video.id}`} key={video.id} state={video}>
+            <Link to={`/video/${video.id}`} key={video.id}>
               <div className="w-105">
                 <Thumbnail
                   className="aspect-video bg-black rounded-lg overflow-hidden"
