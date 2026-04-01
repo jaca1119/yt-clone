@@ -14,6 +14,7 @@ import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
 import { Avatar, Button } from "@heroui/react";
 import AddComment from "~/components/add-comment";
+import { useAuth } from "react-oidc-context";
 dayjs.extend(LocalizedFormat);
 dayjs.extend(RelativeTime);
 
@@ -57,6 +58,7 @@ export default function Video({ loaderData }: Route.ComponentProps) {
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [hasNext, setHasNext] = useState(initialHasNext);
   const [replyId, setReplyId] = useState<string | undefined>();
+  const auth = useAuth();
 
   const currentOffset = useRef(10);
 
@@ -104,7 +106,7 @@ export default function Video({ loaderData }: Route.ComponentProps) {
           </div>
         </div>
         <div className="self-start">
-          <AddComment videoId={video.id}></AddComment>
+          {auth.isAuthenticated && <AddComment videoId={video.id}></AddComment>}
           <p className="font-bold text-xl">Comments</p>
           <div>
             {comments.map((c) => (
@@ -123,17 +125,21 @@ export default function Video({ loaderData }: Route.ComponentProps) {
                   </div>
                   <div>
                     <p>{c.content}</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setReplyId(c.id)}
-                    >
-                      Reply
-                    </Button>
-                    {replyId === c.id && (
-                      <AddComment videoId={video.id} replyId={c.id}>
-                        Add reply:
-                      </AddComment>
+                    {auth.isAuthenticated && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setReplyId(c.id)}
+                        >
+                          Reply
+                        </Button>
+                        {replyId === c.id && (
+                          <AddComment videoId={video.id} replyId={c.id}>
+                            Add reply:
+                          </AddComment>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
