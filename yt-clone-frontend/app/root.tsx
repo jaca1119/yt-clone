@@ -6,7 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import { Button } from "@heroui/react";
+import { Avatar, Button } from "@heroui/react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -91,6 +91,9 @@ function Nav() {
             <Button variant="secondary" onClick={() => void auth.removeUser()}>
               Logout
             </Button>
+            <Avatar>
+              <Avatar.Fallback>{auth.user?.profile.sub.at(0)}</Avatar.Fallback>
+            </Avatar>
           </>
         ) : (
           <Button
