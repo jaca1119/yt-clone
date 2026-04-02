@@ -19,6 +19,7 @@ export interface Comment {
   content: string;
   createdAt: string;
   createdBy: string;
+  replyCount: number;
 }
 
 interface CommentResponse {
@@ -109,6 +110,18 @@ export async function deleteVideo(videoId: string) {
 export async function getVideoComments(videoId: string, offset?: number) {
   const res = await axios.get<CommentsPageOffset>(
     `http://localhost:8080/videos/${videoId}/comments/newest?offset=${offset || ""}`,
+  );
+
+  return res.data;
+}
+
+export async function getCommentReplies(
+  videoId: string,
+  parentId: string,
+  offset?: number,
+) {
+  const res = await axios.get<CommentsPageOffset>(
+    `http://localhost:8080/videos/${videoId}/comments/${parentId}/newest?offset=${offset || ""}`,
   );
 
   return res.data;
