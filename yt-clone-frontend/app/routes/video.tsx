@@ -133,14 +133,12 @@ export default function Video({ loaderData }: Route.ComponentProps) {
                   <Avatar.Fallback>{c.createdBy.at(0)}</Avatar.Fallback>
                 </Avatar>
                 <div>
-                  <div>
-                    <p className="text-sm">
-                      <span>{c.createdBy} </span>
-                      <span className="text-gray-500">
-                        {dayjs(c.createdAt).fromNow()}
-                      </span>
-                    </p>
-                  </div>
+                  <p className="text-sm">
+                    <span>{c.createdBy} </span>
+                    <span className="text-gray-500">
+                      {dayjs(c.createdAt).fromNow()}
+                    </span>
+                  </p>
                   <div>
                     <p>{c.content}</p>
                     {c.replyCount !== 0 && (
@@ -166,17 +164,13 @@ export default function Video({ loaderData }: Route.ComponentProps) {
                               </Avatar.Fallback>
                             </Avatar>
                             <div>
-                              <div>
-                                <p className="text-sm">
-                                  <span>{r.createdBy} </span>
-                                  <span className="text-gray-500">
-                                    {dayjs(r.createdAt).fromNow()}
-                                  </span>
-                                </p>
-                              </div>
-                              <div>
-                                <p>{r.content}</p>
-                              </div>
+                              <p className="text-sm">
+                                <span>{r.createdBy} </span>
+                                <span className="text-gray-500">
+                                  {dayjs(r.createdAt).fromNow()}
+                                </span>
+                              </p>
+                              <p>{r.content}</p>
                             </div>
                           </div>
                         ))}
