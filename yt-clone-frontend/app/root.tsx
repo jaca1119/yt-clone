@@ -6,7 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import { Avatar, Button } from "@heroui/react";
+import { Avatar, Button, Dropdown, DropdownItem, Header } from "@heroui/react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -85,15 +85,30 @@ function Nav() {
             <Link className="button button--primary" to="/upload">
               Upload
             </Link>
-            <Link className="button button--secondary" to="/manage">
-              Manage
-            </Link>
             <Button variant="secondary" onClick={() => void auth.removeUser()}>
               Logout
             </Button>
-            <Avatar>
-              <Avatar.Fallback>{auth.user?.profile.sub.at(0)}</Avatar.Fallback>
-            </Avatar>
+            <Dropdown>
+              <Button aria-label="Menu" isIconOnly variant="tertiary">
+                <Avatar aria-label="Menu">
+                  <Avatar.Fallback>
+                    {auth.user?.profile.sub.at(0)}
+                  </Avatar.Fallback>
+                </Avatar>
+              </Button>
+              <Dropdown.Popover>
+                <Dropdown.Menu
+                  onAction={(key) => console.log("selected key " + key)}
+                >
+                  <Dropdown.Section>
+                    <Header>Account: {auth.user?.profile.sub}</Header>
+                  </Dropdown.Section>
+                  <DropdownItem>
+                    <Link to="/manage">Manage videos</Link>
+                  </DropdownItem>
+                </Dropdown.Menu>
+              </Dropdown.Popover>
+            </Dropdown>
           </>
         ) : (
           <Button
