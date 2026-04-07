@@ -125,17 +125,27 @@ function Nav() {
             </Dropdown>
           </>
         ) : (
-          <Button
-            onClick={() =>
-              void auth.signinRedirect({
-                state: {
-                  returnTo: location.pathname + location.search + location.hash,
-                },
-              })
-            }
-          >
-            Login
-          </Button>
+          <>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                void auth.signinRedirect({
+                  state: {
+                    returnTo:
+                      location.pathname + location.search + location.hash,
+                  },
+                })
+              }
+            >
+              Login
+            </Button>
+            <a
+              className="button button--primary"
+              href="http://localhost:9090/register"
+            >
+              Register
+            </a>
+          </>
         )}
       </div>
     </div>
