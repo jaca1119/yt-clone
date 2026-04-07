@@ -6,15 +6,22 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import { Avatar, Button, Dropdown, DropdownItem, Header } from "@heroui/react";
+import {
+  Avatar,
+  Button,
+  Dropdown,
+  DropdownItem,
+  Header,
+  Label,
+} from "@heroui/react";
 
 import type { Route } from "./+types/root";
 import "./app.css";
 import { Link } from "react-router";
-import { useEffect, useState } from "react";
 import { AuthProvider, useAuth } from "react-oidc-context";
 import type { User, UserManagerSettings } from "oidc-client-ts";
 import { useLocation } from "react-router";
+import { Clapperboard, LogOut, SquarePlay } from "lucide-react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -83,11 +90,8 @@ function Nav() {
         {auth.isAuthenticated ? (
           <>
             <Link className="button button--primary" to="/upload">
-              Upload
+              <Clapperboard /> Upload
             </Link>
-            <Button variant="secondary" onClick={() => void auth.removeUser()}>
-              Logout
-            </Button>
             <Dropdown>
               <Button aria-label="Menu" isIconOnly variant="tertiary">
                 <Avatar aria-label="Menu">
@@ -97,15 +101,20 @@ function Nav() {
                 </Avatar>
               </Button>
               <Dropdown.Popover>
-                <Dropdown.Menu
-                  onAction={(key) => console.log("selected key " + key)}
-                >
+                <Dropdown.Menu>
                   <Dropdown.Section>
                     <Header>Account: {auth.user?.profile.sub}</Header>
                   </Dropdown.Section>
                   <DropdownItem>
-                    <Link to="/manage">Manage videos</Link>
+                    <SquarePlay />
+                    <Label>
+                      <Link to="/manage">Manage videos</Link>
+                    </Label>
                   </DropdownItem>
+                  <Dropdown.Item onClick={() => void auth.removeUser()}>
+                    <LogOut />
+                    <Label>Logout</Label>
+                  </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown.Popover>
             </Dropdown>
