@@ -111,7 +111,12 @@ function Nav() {
                       <Link to="/manage">Manage videos</Link>
                     </Label>
                   </DropdownItem>
-                  <Dropdown.Item onClick={() => void auth.removeUser()}>
+                  <Dropdown.Item
+                    onClick={async () => {
+                      await auth.removeUser();
+                      window.location.href = "http://localhost:9090/logout";
+                    }}
+                  >
                     <LogOut />
                     <Label>Logout</Label>
                   </Dropdown.Item>
