@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - New Account</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 450px; margin: 50px auto; }
+        .error { color: red; font-size: 0.9em; }
+        .global-error { color: red; background: #ffe6e6; padding: 10px; border-radius: 5px; }
+        input { width: 100%; padding: 10px; margin: 8px 0; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+<h2>Create New Account</h2>
+
+<!-- Global Error Message -->
+<div th:if="${error}" class="global-error" th:text="${error}"></div>
+
+<form th:action="@{/register}" th:object="${registerRequest}" method="post">
+
+    <!-- Username Field -->
+    <div>
+        <label for="username">Username</label>
+        <input id="username" type="text" th:field="*{username}" />
+        <div th:if="${#fields.hasErrors('username')}" class="error"
+             th:errors="*{username}"></div>
+    </div>
+
+    <!-- Email Field -->
+<!--    <div>-->
+<!--        <label>Email</label>-->
+<!--        <input type="email" th:field="*{email}" />-->
+<!--        <div th:if="${#fields.hasErrors('email')}" class="error"-->
+<!--             th:errors="*{email}"></div>-->
+<!--    </div>-->
+
+    <!-- Password Field -->
+    <div>
+        <label for="password">Password</label>
+        <input id="password" type="password" th:field="*{password}" />
+        <div th:if="${#fields.hasErrors('password')}" class="error"
+             th:errors="*{password}"></div>
+    </div>
+
+    <button type="submit">Register</button>
+</form>
+
+<p style="text-align:center; margin-top: 20px;">
+    Already have an account? <a th:href="@{/login}">Login here</a>
+</p>
+</body>
+</html>

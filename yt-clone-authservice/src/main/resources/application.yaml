@@ -18,6 +18,6 @@ server:
     session:
       cookie:
         name: AUTHSESSIONID
-#logging:
-#  level:
-#    org.springframework.security: trace
+#  logging:
+#    level:
+#      org.springframework.security: trace

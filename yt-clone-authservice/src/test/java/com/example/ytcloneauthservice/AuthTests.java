@@ -91,7 +91,8 @@ public class AuthTests {
                 .formField("password", password)
                 .with(csrf())
                 .assertThat()
-                .hasStatus(HttpStatus.OK)
+                .hasStatus(HttpStatus.FOUND)
+                .hasRedirectedUrl("/login?registered=true")
                 .matches(unauthenticated());
 
         //try to log in with wrong credentials

@@ -20,7 +20,7 @@ public class UserService {
 
     public void register(String username, String password) {
         if (userRepository.findByUsername(username).isPresent()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "username already exists");
+            throw new UserAlreadyExistException("Username %s already exists".formatted(username));
         }
 
         AppUser user = new AppUser();
