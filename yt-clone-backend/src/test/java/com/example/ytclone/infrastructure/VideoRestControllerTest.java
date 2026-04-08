@@ -534,6 +534,78 @@ public class VideoRestControllerTest {
                 .satisfies(video -> assertThat(video.getViewsCount()).isOne());
     }
 
+    @Test
+    void shouldNotLikeVideoAsUnauthenticated() {
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> assertThat(video.getLikes()).isZero());
+
+        mockMvcTester.post().uri("/videos/{videoId}/toggle-like", videoId)
+                .assertThat()
+                .hasStatus(HttpStatus.UNAUTHORIZED);
+
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> assertThat(video.getLikes()).isZero());
+    }
+
+    @Test
+    void shouldToggleLikeOnVideo() {
+
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> assertThat(video.getLikes()).isZero());
+
+        mockMvcTester.post().uri("/videos/{videoId}/toggle-like", videoId)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> assertThat(video.getLikes()).isOne());
+
+        mockMvcTester.post().uri("/videos/{videoId}/toggle-like", videoId)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> assertThat(video.getLikes()).isZero());
+
+        //like again
+        mockMvcTester.post().uri("/videos/{videoId}/toggle-like", videoId)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        //add ten likes from different users
+        for (int i = 0; i < 10; i++) {
+            int finalI = i;
+            mockMvcTester.post().uri("/videos/{videoId}/toggle-like", videoId)
+                    .with(jwt().jwt(jwt -> jwt.subject("user" + finalI)))
+                    .assertThat()
+                    .hasStatus(HttpStatus.OK);
+        }
+
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> assertThat(video.getLikes()).isEqualTo(11));
+    }
+
     List<UUID> createComments() {
         return createComments(100);
     }

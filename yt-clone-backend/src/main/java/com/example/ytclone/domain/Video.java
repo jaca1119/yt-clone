@@ -16,4 +16,5 @@ public class Video {
     private Long length;
     private LocalDateTime uploadDate;
     private long viewsCount;
+    private long likes;
 }

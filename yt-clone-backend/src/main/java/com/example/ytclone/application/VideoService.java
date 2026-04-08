@@ -28,11 +28,13 @@ public class VideoService {
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
     private final VideoProcessor videoProcessor;
+    private final UserVideoInteractionRepository userVideoInteractionRepository;
 
-    public VideoService(VideoRepository videoRepository, CommentRepository commentRepository, VideoProcessor videoProcessor) {
+    public VideoService(VideoRepository videoRepository, CommentRepository commentRepository, VideoProcessor videoProcessor, UserVideoInteractionRepository userVideoInteractionRepository) {
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
         this.videoProcessor = videoProcessor;
+        this.userVideoInteractionRepository = userVideoInteractionRepository;
     }
 
     public Optional<Video> getVideo(UUID id) {
@@ -60,7 +62,7 @@ public class VideoService {
     @Transactional
     public UUID startVideoUpload(String title, String user, LocalDateTime uploadTime) {
         UUID id = UUID.randomUUID();
-        videoRepository.save(new VideoEntity(id, null, title, user, null, null, uploadTime, 0));
+        videoRepository.save(new VideoEntity(id, null, title, user, null, null, uploadTime, 0, 0, null, 0));
         return id;
     }
 
@@ -161,13 +163,30 @@ public class VideoService {
         return commentRepository.findByVideoAndParentOrderByCreatedAtDesc(videoEntity, parentId, offset);
     }
 
-    private Video toVideo(VideoEntity videoEntity) {
-        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate(), videoEntity.getViewsCount());
-    }
-
     @Transactional
     public void trackView(UUID videoId) {
         //naive implementation, async would be better
         videoRepository.saveView(videoId);
+    }
+
+    @Transactional
+    public void toggleLike(UUID videoId, String username) {
+        VideoEntity video = videoRepository.findById(videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        UserVideoInteractionEntity userVideoInteractionEntity = userVideoInteractionRepository.findByUsernameAndVideo(username, video).orElseGet(() -> new UserVideoInteractionEntity(UUID.randomUUID(), username, video, null));
+
+        if (userVideoInteractionEntity.getRate() == null  || userVideoInteractionEntity.getRate() == VideoRate.DISLIKE) {
+            userVideoInteractionEntity.setRate(VideoRate.LIKE);
+            //optimistic version locking to prevent concurrent missing update. Higher transaction level could be used instead
+            video.setLikes(video.getLikes() + 1);
+        } else {
+            userVideoInteractionEntity.setRate(null);
+            video.setLikes(video.getLikes() - 1);
+        }
+
+        userVideoInteractionRepository.save(userVideoInteractionEntity);
+    }
+
+    private Video toVideo(VideoEntity videoEntity) {
+        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate(), videoEntity.getViewsCount(), videoEntity.getLikes());
     }
 }

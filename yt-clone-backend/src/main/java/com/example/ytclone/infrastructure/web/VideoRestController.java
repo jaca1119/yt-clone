@@ -139,4 +139,10 @@ public class VideoRestController {
         videoService.trackView(videoId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{videoId}/toggle-like")
+    public ResponseEntity toggleLike(@PathVariable UUID videoId, @AuthenticationPrincipal Jwt jwt) {
+        videoService.toggleLike(videoId, jwt.getSubject());
+        return ResponseEntity.ok().build();
+    }
 }

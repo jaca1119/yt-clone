@@ -23,7 +23,7 @@ public class VideoServiceTest {
     VideoRepository videoRepository = new InMemoryVideoRepository();
     CommentRepository commentRepository = Mockito.mock();
     VideoProcessor videoProcessor = Mockito.mock();
-    VideoService videoService = new VideoService(videoRepository, commentRepository, videoProcessor);
+    VideoService videoService = new VideoService(videoRepository, commentRepository, videoProcessor, Mockito.mock());
 
     @Test
     void shouldReturnPathToVideoFile() {
@@ -69,6 +69,6 @@ public class VideoServiceTest {
         //then
         Optional<Video> video = videoService.getVideo(id);
         assertThat(video).isPresent();
-        assertThat(video.get()).isEqualTo(new Video(id, file.getName(), initialTitle, "test", 123L, uploadDatetime, 0));
+        assertThat(video.get()).isEqualTo(new Video(id, file.getName(), initialTitle, "test", 123L, uploadDatetime, 0, 0));
     }
 }

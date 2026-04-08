@@ -8,6 +8,7 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -30,4 +31,12 @@ public class VideoEntity {
     @Column(nullable = false)
     @ColumnDefault("0")
     private long viewsCount = 0;
+    @Column(nullable = false)
+    @ColumnDefault("0")
+    private long likes = 0;
+    @OneToMany(mappedBy = "video", cascade = CascadeType.REMOVE)
+    private Set<UserVideoInteractionEntity> userVideoInteractions;
+
+    @Version
+    private long version;
 }
