@@ -5,12 +5,14 @@ import {
   addComment,
   type Comment,
   getCommentReplies,
+  getUserVideoInteractions,
   getVideoComments,
   getVideoMetadata,
   toggleDislike,
   toggleLike,
   trackView,
   type Video,
+  type VideoRate,
 } from "~/scripts/api";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
@@ -51,7 +53,7 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
   return { ok: true };
 }
 
-export default function Video({ loaderData }: Route.ComponentProps) {
+export default function Video({ loaderData, params }: Route.ComponentProps) {
   const {
     video,
     comments: initialComments,
@@ -65,6 +67,7 @@ export default function Video({ loaderData }: Route.ComponentProps) {
     parentId: string;
     replies: Comment[];
   } | null>(null);
+  const [rate, setRate] = useState<VideoRate | null>(null);
   const auth = useAuth();
 
   const currentOffset = useRef(10);
@@ -75,6 +78,14 @@ export default function Video({ loaderData }: Route.ComponentProps) {
     currentOffset.current = 10;
     setReplyId(null);
   }, [initialComments, initialHasNext]);
+
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      getUserVideoInteractions(params.id).then((res) => {
+        setRate(res.rate);
+      });
+    }
+  }, [params.id]);
 
   async function showMore() {
     const nextCommentsPage = await getVideoComments(
@@ -100,10 +111,12 @@ export default function Video({ loaderData }: Route.ComponentProps) {
 
   function like(videoId: string) {
     toggleLike(videoId);
+    setRate(rate === null ? "LIKE" : null);
   }
 
   function dislike(videoId: string) {
     toggleDislike(videoId);
+    setRate(rate === null ? "DISLIKE" : null);
   }
 
   if (!video) {
@@ -135,14 +148,14 @@ export default function Video({ loaderData }: Route.ComponentProps) {
           <div className="ml-auto self-center">
             <ButtonGroup variant="tertiary" isDisabled={!auth.isAuthenticated}>
               <Button onClick={() => like(video.id)}>
-                <ThumbsUp />
+                <ThumbsUp fill={rate === "LIKE" ? "black" : "none"} />
                 <span className="text-xs font-semibold">
                   {video.likes !== 0 ? video.likes : "Like"}
                 </span>
               </Button>
               <Button onClick={() => dislike(video.id)}>
                 <ButtonGroup.Separator />
-                <ThumbsDown />
+                <ThumbsDown fill={rate === "DISLIKE" ? "black" : "none"} />
                 <span className="text-xs font-semibold">
                   {video.dislikes !== 0 ? video.dislikes : "Dislike"}
                 </span>
