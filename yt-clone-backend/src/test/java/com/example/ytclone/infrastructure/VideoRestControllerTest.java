@@ -3,6 +3,7 @@ package com.example.ytclone.infrastructure;
 import com.example.ytclone.TestcontainersConfiguration;
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.persistence.CommentDTO;
+import com.example.ytclone.infrastructure.persistence.VideoRate;
 import com.example.ytclone.infrastructure.web.dto.*;
 import org.assertj.core.api.Condition;
 import org.assertj.core.api.InstanceOfAssertFactories;
@@ -638,6 +639,50 @@ public class VideoRestControllerTest {
                     assertThat(video.getLikes()).isEqualTo(5);
                     assertThat(video.getDislikes()).isEqualTo(6);
                 });
+    }
+
+    @Test
+    void shouldGetUserInteractionForVideo() {
+        mockMvcTester.get().uri("/videos/{videoId}/user-interactions", videoId)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.NOT_FOUND);
+
+        mockMvcTester.post().uri("/videos/{videoId}/toggle-like", videoId)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.get().uri("/videos/{videoId}/user-interactions", videoId)
+                .with(jwt())
+                .assertThat()
+                .bodyJson()
+                .convertTo(UserVideoInteractionDTO.class)
+                .satisfies(video -> assertThat(video.rate()).hasValue(VideoRate.LIKE));
+
+        mockMvcTester.post().uri("/videos/{videoId}/toggle-like", videoId)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.get().uri("/videos/{videoId}/user-interactions", videoId)
+                .with(jwt())
+                .assertThat()
+                .bodyJson()
+                .convertTo(UserVideoInteractionDTO.class)
+                .satisfies(video -> assertThat(video.rate()).isNotPresent());
+
+        mockMvcTester.post().uri("/videos/{videoId}/toggle-dislike", videoId)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.get().uri("/videos/{videoId}/user-interactions", videoId)
+                .with(jwt())
+                .assertThat()
+                .bodyJson()
+                .convertTo(UserVideoInteractionDTO.class)
+                .satisfies(video -> assertThat(video.rate()).hasValue(VideoRate.DISLIKE));
     }
 
     List<UUID> createComments() {

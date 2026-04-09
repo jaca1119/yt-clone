@@ -6,5 +6,5 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserVideoInteractionRepository extends JpaRepository<UserVideoInteractionEntity, UUID> {
-    Optional<UserVideoInteractionEntity> findByUsernameAndVideo(String username, VideoEntity video);
+    Optional<UserVideoInteractionEntity> findByUsernameAndVideoId(String username, UUID videoId);
 }

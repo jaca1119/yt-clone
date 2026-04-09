@@ -215,6 +215,10 @@ public class VideoService {
         userVideoInteractionRepository.save(userVideoInteractionEntity);
     }
 
+    public UserVideoInteractionEntity getUserInteractionForVideo(UUID videoId, String username) {
+        return userVideoInteractionRepository.findByUsernameAndVideoId(username, videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
     private Video toVideo(VideoEntity videoEntity) {
         return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate(), videoEntity.getViewsCount(), videoEntity.getLikes(), videoEntity.getDislikes());
     }
