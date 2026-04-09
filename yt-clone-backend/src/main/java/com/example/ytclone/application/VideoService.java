@@ -19,7 +19,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
+/*
+It shouldn't return objects from the infrastructure. It should throw domain exceptions that are mapped by web layer instead of ResponseStatusException
+ */
 @Slf4j
 @Service
 public class VideoService {
@@ -182,7 +184,7 @@ public class VideoService {
     }
 
     private void toggleRate(VideoEntity video, String username, VideoRate rate) {
-        UserVideoInteractionEntity userVideoInteractionEntity = userVideoInteractionRepository.findByUsernameAndVideo(username, video).orElseGet(() -> new UserVideoInteractionEntity(UUID.randomUUID(), username, video, null));
+        UserVideoInteractionEntity userVideoInteractionEntity = userVideoInteractionRepository.findByUsernameAndVideoId(username, video.getId()).orElseGet(() -> new UserVideoInteractionEntity(UUID.randomUUID(), username, video, null));
 
         if (userVideoInteractionEntity.getRate() == null) {
             if (rate == VideoRate.LIKE) {
