@@ -145,4 +145,10 @@ public class VideoRestController {
         videoService.toggleLike(videoId, jwt.getSubject());
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/{videoId}/toggle-dislike")
+    public ResponseEntity toggleDisLike(@PathVariable UUID videoId, @AuthenticationPrincipal Jwt jwt) {
+        videoService.toggleDislike(videoId, jwt.getSubject());
+        return ResponseEntity.ok().build();
+    }
 }

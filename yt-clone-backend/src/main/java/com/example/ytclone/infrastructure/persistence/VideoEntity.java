@@ -34,6 +34,8 @@ public class VideoEntity {
     @Column(nullable = false)
     @ColumnDefault("0")
     private long likes = 0;
+    @ColumnDefault("0")
+    private long dislikes = 0;
     @OneToMany(mappedBy = "video", cascade = CascadeType.REMOVE)
     private Set<UserVideoInteractionEntity> userVideoInteractions;
 

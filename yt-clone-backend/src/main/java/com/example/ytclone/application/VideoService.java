@@ -62,7 +62,7 @@ public class VideoService {
     @Transactional
     public UUID startVideoUpload(String title, String user, LocalDateTime uploadTime) {
         UUID id = UUID.randomUUID();
-        videoRepository.save(new VideoEntity(id, null, title, user, null, null, uploadTime, 0, 0, null, 0));
+        videoRepository.save(new VideoEntity(id, null, title, user, null, null, uploadTime, 0, 0, 0, null, 0));
         return id;
     }
 
@@ -172,21 +172,50 @@ public class VideoService {
     @Transactional
     public void toggleLike(UUID videoId, String username) {
         VideoEntity video = videoRepository.findById(videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        toggleRate(video, username, VideoRate.LIKE);
+    }
+
+    @Transactional
+    public void toggleDislike(UUID videoId, String username) {
+        VideoEntity video = videoRepository.findById(videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        toggleRate(video, username, VideoRate.DISLIKE);
+    }
+
+    private void toggleRate(VideoEntity video, String username, VideoRate rate) {
         UserVideoInteractionEntity userVideoInteractionEntity = userVideoInteractionRepository.findByUsernameAndVideo(username, video).orElseGet(() -> new UserVideoInteractionEntity(UUID.randomUUID(), username, video, null));
 
-        if (userVideoInteractionEntity.getRate() == null  || userVideoInteractionEntity.getRate() == VideoRate.DISLIKE) {
-            userVideoInteractionEntity.setRate(VideoRate.LIKE);
-            //optimistic version locking to prevent concurrent missing update. Higher transaction level could be used instead
-            video.setLikes(video.getLikes() + 1);
+        if (userVideoInteractionEntity.getRate() == null) {
+            if (rate == VideoRate.LIKE) {
+                userVideoInteractionEntity.setRate(VideoRate.LIKE);
+                video.setLikes(video.getLikes() + 1);
+            } else if (rate == VideoRate.DISLIKE) {
+                userVideoInteractionEntity.setRate(VideoRate.DISLIKE);
+                video.setDislikes(video.getDislikes() + 1);
+            }
+        } else if (userVideoInteractionEntity.getRate() == rate) {
+            if (rate == VideoRate.LIKE) {
+                userVideoInteractionEntity.setRate(null);
+                video.setLikes(video.getLikes() - 1);
+            } else if (rate == VideoRate.DISLIKE) {
+                userVideoInteractionEntity.setRate(null);
+                video.setDislikes(video.getDislikes() - 1);
+            }
         } else {
-            userVideoInteractionEntity.setRate(null);
-            video.setLikes(video.getLikes() - 1);
+            if (rate == VideoRate.LIKE) {
+                userVideoInteractionEntity.setRate(VideoRate.LIKE);
+                video.setLikes(video.getLikes() + 1);
+                video.setDislikes(video.getDislikes() - 1);
+            } else if (rate == VideoRate.DISLIKE) {
+                userVideoInteractionEntity.setRate(VideoRate.DISLIKE);
+                video.setLikes(video.getLikes() - 1);
+                video.setDislikes(video.getDislikes() + 1);
+            }
         }
 
         userVideoInteractionRepository.save(userVideoInteractionEntity);
     }
 
     private Video toVideo(VideoEntity videoEntity) {
-        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate(), videoEntity.getViewsCount(), videoEntity.getLikes());
+        return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate(), videoEntity.getViewsCount(), videoEntity.getLikes(), videoEntity.getDislikes());
     }
 }

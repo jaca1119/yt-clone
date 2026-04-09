@@ -554,7 +554,7 @@ public class VideoRestControllerTest {
     }
 
     @Test
-    void shouldToggleLikeOnVideo() {
+    void shouldToggleLikeAndDislikeOnVideo() {
 
         mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
                 .assertThat()
@@ -603,7 +603,41 @@ public class VideoRestControllerTest {
                 .assertThat()
                 .bodyJson()
                 .convertTo(Video.class)
-                .satisfies(video -> assertThat(video.getLikes()).isEqualTo(11));
+                .satisfies(video -> {
+                    assertThat(video.getLikes()).isEqualTo(11);
+                    assertThat(video.getDislikes()).isZero();
+                });
+
+        mockMvcTester.post().uri("/videos/{videoId}/toggle-dislike", videoId)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> {
+                    assertThat(video.getLikes()).isEqualTo(10);
+                    assertThat(video.getDislikes()).isOne();
+                });
+
+        for (int i = 0; i < 5; i++) {
+            int finalI = i;
+            mockMvcTester.post().uri("/videos/{videoId}/toggle-dislike", videoId)
+                    .with(jwt().jwt(jwt -> jwt.subject("user" + finalI)))
+                    .assertThat()
+                    .hasStatus(HttpStatus.OK);
+        }
+
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> {
+                    assertThat(video.getLikes()).isEqualTo(5);
+                    assertThat(video.getDislikes()).isEqualTo(6);
+                });
     }
 
     List<UUID> createComments() {
