@@ -40,5 +40,6 @@ public class VideoEntity {
     private Set<UserVideoInteractionEntity> userVideoInteractions;
 
     @Version
+    @ColumnDefault("0")
     private long version;
 }
