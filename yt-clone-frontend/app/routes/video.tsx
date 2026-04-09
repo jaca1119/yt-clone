@@ -7,15 +7,17 @@ import {
   getCommentReplies,
   getVideoComments,
   getVideoMetadata,
+  toggleDislike,
+  toggleLike,
   trackView,
   type Video,
 } from "~/scripts/api";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
-import { Avatar, Button } from "@heroui/react";
+import { Avatar, Button, ButtonGroup } from "@heroui/react";
 import AddComment from "~/components/add-comment";
 import { useAuth } from "react-oidc-context";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, ThumbsDown, ThumbsUp } from "lucide-react";
 dayjs.extend(LocalizedFormat);
 dayjs.extend(RelativeTime);
 
@@ -96,6 +98,14 @@ export default function Video({ loaderData }: Route.ComponentProps) {
     }
   }
 
+  function like(videoId: string) {
+    toggleLike(videoId);
+  }
+
+  function dislike(videoId: string) {
+    toggleDislike(videoId);
+  }
+
   if (!video) {
     return <div>Video not found</div>;
   }
@@ -121,6 +131,23 @@ export default function Video({ loaderData }: Route.ComponentProps) {
               <span>{video.viewsCount} views </span> -
               <span> {dayjs(video.uploadDate).fromNow()}</span>
             </p>
+          </div>
+          <div className="ml-auto self-center">
+            <ButtonGroup variant="tertiary" isDisabled={!auth.isAuthenticated}>
+              <Button onClick={() => like(video.id)}>
+                <ThumbsUp />
+                <span className="text-xs font-semibold">
+                  {video.likes !== 0 ? video.likes : "Like"}
+                </span>
+              </Button>
+              <Button onClick={() => dislike(video.id)}>
+                <ButtonGroup.Separator />
+                <ThumbsDown />
+                <span className="text-xs font-semibold">
+                  {video.dislikes !== 0 ? video.dislikes : "Dislike"}
+                </span>
+              </Button>
+            </ButtonGroup>
           </div>
         </div>
         <div className="self-start">

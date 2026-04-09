@@ -8,6 +8,8 @@ export interface Video {
   uploadDate: string;
   creator: string;
   viewsCount: number;
+  likes: number;
+  dislikes: number;
 }
 
 export interface UploadVideoResponse {
@@ -150,4 +152,28 @@ export async function addComment(
 
 export async function trackView(videoId: string) {
   return await axios.post(`http://localhost:8080/videos/${videoId}/views`);
+}
+
+export async function toggleLike(videoId: string) {
+  return await axios.post(
+    `http://localhost:8080/videos/${videoId}/toggle-like`,
+    null,
+    {
+      headers: {
+        Authorization: "Bearer " + getAccessToken(),
+      },
+    },
+  );
+}
+
+export async function toggleDislike(videoId: string) {
+  return await axios.post(
+    `http://localhost:8080/videos/${videoId}/toggle-dislike`,
+    null,
+    {
+      headers: {
+        Authorization: "Bearer " + getAccessToken(),
+      },
+    },
+  );
 }
