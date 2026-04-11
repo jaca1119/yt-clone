@@ -197,21 +197,47 @@ public class VideoService {
     @Transactional
     public void toggleLikeForComment(UUID commentId, String username) {
         CommentEntity commentEntity = commentRepository.findById(commentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        UserCommentInteractionEntity userCommentInteractionEntity = userCommentInteractionRepository.findByUsernameAndCommentId(username, commentId).orElseGet(() -> new UserCommentInteractionEntity(UUID.randomUUID(), username, commentEntity, new UserCommentInteraction(null)));
+        toggleRateForComment(commentEntity, username, CommentRate.LIKE);
+    }
+
+    @Transactional
+    public void toggleDislikeForComment(UUID commentId, String username) {
+        CommentEntity commentEntity = commentRepository.findById(commentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        toggleRateForComment(commentEntity, username, CommentRate.DISLIKE);
+    }
+
+    private void toggleRateForComment(CommentEntity comment, String username, CommentRate rate) {
+        UserCommentInteractionEntity userCommentInteractionEntity = userCommentInteractionRepository.findByUsernameAndCommentId(username, comment.getId()).orElseGet(() -> new UserCommentInteractionEntity(UUID.randomUUID(), username, comment, new UserCommentInteraction(null)));
 
         if (userCommentInteractionEntity.getUserCommentInteraction().getRate() == null) {
-            userCommentInteractionEntity.getUserCommentInteraction().setRate(CommentRate.LIKE);
-            commentEntity.setLikes(commentEntity.getLikes() + 1);
-        } else if (userCommentInteractionEntity.getUserCommentInteraction().getRate() == CommentRate.LIKE) {
-            userCommentInteractionEntity.getUserCommentInteraction().setRate(null);
-            commentEntity.setLikes(commentEntity.getLikes() - 1);
-        } else if (userCommentInteractionEntity.getUserCommentInteraction().getRate() == CommentRate.DISLIKE) {
-            userCommentInteractionEntity.getUserCommentInteraction().setRate(CommentRate.LIKE);
-            commentEntity.setLikes(commentEntity.getLikes() + 1);
-            commentEntity.setDislikes(commentEntity.getDislikes() - 1);
+            if (rate == CommentRate.LIKE) {
+                userCommentInteractionEntity.getUserCommentInteraction().setRate(CommentRate.LIKE);
+                comment.setLikes(comment.getLikes() + 1);
+            } else if (rate == CommentRate.DISLIKE) {
+                userCommentInteractionEntity.getUserCommentInteraction().setRate(CommentRate.DISLIKE);
+                comment.setDislikes(comment.getDislikes() + 1);
+            }
+        } else if (userCommentInteractionEntity.getUserCommentInteraction().getRate() == rate) {
+            if (rate == CommentRate.LIKE) {
+                userCommentInteractionEntity.getUserCommentInteraction().setRate(null);
+                comment.setLikes(comment.getLikes() - 1);
+            } else if (rate == CommentRate.DISLIKE) {
+                userCommentInteractionEntity.getUserCommentInteraction().setRate(null);
+                comment.setDislikes(comment.getDislikes() - 1);
+            }
+        } else {
+            if (rate == CommentRate.LIKE) {
+                userCommentInteractionEntity.getUserCommentInteraction().setRate(CommentRate.LIKE);
+                comment.setLikes(comment.getLikes() + 1);
+                comment.setDislikes(comment.getDislikes() - 1);
+            } else if (rate == CommentRate.DISLIKE) {
+                userCommentInteractionEntity.getUserCommentInteraction().setRate(CommentRate.DISLIKE);
+                comment.setLikes(comment.getLikes() - 1);
+                comment.setDislikes(comment.getDislikes() + 1);
+            }
         }
 
-        commentRepository.save(commentEntity);
+        commentRepository.save(comment);
         userCommentInteractionRepository.save(userCommentInteractionEntity);
     }
 

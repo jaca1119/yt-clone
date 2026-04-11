@@ -738,6 +738,89 @@ public class VideoRestControllerTest {
                 .extracting(CommentsPageOffset::comments)
                 .asInstanceOf(InstanceOfAssertFactories.list(CommentDTO.class))
                 .anyMatch(c -> c.likes() == 11);
+
+        //toggle like again so it should remove like
+        mockMvcTester.post().uri("/videos/{videoId}/comments/{commentId}/toggle-like", videoId, comments.get(0))
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.post().uri("/videos/{videoId}/comments/user-interactions", videoId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(List.of(comments.get(0), comments.get(1))))
+                .with(jwt())
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.list(UserCommentInteractionDTO.class))
+                .hasSize(1)
+                .anyMatch(u -> u.commentId().equals(comments.getFirst()) && u.rate() == null);
+
+        mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(CommentsPageOffset.class)
+                .satisfies(c -> assertThat(c.comments()).hasSize(10))
+                .extracting(CommentsPageOffset::comments)
+                .asInstanceOf(InstanceOfAssertFactories.list(CommentDTO.class))
+                .anyMatch(c -> c.likes() == 10);
+
+        //toggle dislike
+        mockMvcTester.post().uri("/videos/{videoId}/comments/{commentId}/toggle-dislike", videoId, comments.get(0))
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.post().uri("/videos/{videoId}/comments/user-interactions", videoId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(List.of(comments.get(0), comments.get(1))))
+                .with(jwt())
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.list(UserCommentInteractionDTO.class))
+                .hasSize(1)
+                .anyMatch(u -> u.commentId().equals(comments.getFirst()) && u.rate().equals("DISLIKE"));
+
+        mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(CommentsPageOffset.class)
+                .satisfies(c -> assertThat(c.comments()).hasSize(10))
+                .extracting(CommentsPageOffset::comments)
+                .asInstanceOf(InstanceOfAssertFactories.list(CommentDTO.class))
+                .anyMatch(c -> c.dislikes() == 1);
+
+        //switch to like
+        mockMvcTester.post().uri("/videos/{videoId}/comments/{commentId}/toggle-like", videoId, comments.get(0))
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.post().uri("/videos/{videoId}/comments/user-interactions", videoId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(List.of(comments.get(0), comments.get(1))))
+                .with(jwt())
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.list(UserCommentInteractionDTO.class))
+                .hasSize(1)
+                .anyMatch(u -> u.commentId().equals(comments.getFirst()) && u.rate().equals("LIKE"));
+
+        for (int i = 0; i < 5; i++) {
+            int finalI = i;
+            mockMvcTester.post().uri("/videos/{videoId}/comments/{commentId}/toggle-dislike", videoId, comments.get(0))
+                    .with(jwt().jwt(jwt -> jwt.subject("user" + finalI)))
+                    .assertThat()
+                    .hasStatus(HttpStatus.OK);
+        }
+
+        mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(CommentsPageOffset.class)
+                .satisfies(c -> assertThat(c.comments()).hasSize(10))
+                .extracting(CommentsPageOffset::comments)
+                .asInstanceOf(InstanceOfAssertFactories.list(CommentDTO.class))
+                .anyMatch(c -> c.likes() == 6 && c.dislikes() == 5);
     }
 
     List<UUID> createComments() {

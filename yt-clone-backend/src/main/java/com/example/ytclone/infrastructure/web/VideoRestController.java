@@ -163,12 +163,18 @@ public class VideoRestController {
     @PostMapping("/{videoId}/comments/user-interactions")
     public ResponseEntity<List<UserCommentInteractionDTO>> getUserInteractionsForComments(@PathVariable UUID videoId, @AuthenticationPrincipal Jwt jwt, @RequestBody List<String> commentsIds) {
         List<UserCommentInteractionEntity> userInteractionForComments = videoService.getUserInteractionForComments(jwt.getSubject(), commentsIds);
-        return ResponseEntity.ok(userInteractionForComments.stream().map(c -> new UserCommentInteractionDTO(c.getComment().getId(), c.getUserCommentInteraction().getRate().name())).toList());
+        return ResponseEntity.ok(userInteractionForComments.stream().map(c -> new UserCommentInteractionDTO(c.getComment().getId(), c.getUserCommentInteraction().getRate() != null ? c.getUserCommentInteraction().getRate().name() : null)).toList());
     }
 
     @PostMapping("/{videoId}/comments/{commentId}/toggle-like")
     public ResponseEntity toggleLike(@PathVariable UUID videoId, @PathVariable UUID commentId, @AuthenticationPrincipal Jwt jwt) {
         videoService.toggleLikeForComment(commentId, jwt.getSubject());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{videoId}/comments/{commentId}/toggle-dislike")
+    public ResponseEntity toggleDislike(@PathVariable UUID videoId, @PathVariable UUID commentId, @AuthenticationPrincipal Jwt jwt) {
+        videoService.toggleDislikeForComment(commentId, jwt.getSubject());
         return ResponseEntity.ok().build();
     }
 }
