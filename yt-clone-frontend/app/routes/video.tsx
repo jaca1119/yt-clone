@@ -175,6 +175,10 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
                 content={c.content}
                 user={c.createdBy}
                 createdAt={c.createdAt}
+                likes={c.likes}
+                dislikes={c.dislikes}
+                commentId={c.id}
+                videoId={video.id}
               >
                 {c.replyCount !== 0 && (
                   <Button variant="ghost" onClick={() => toggleReplies(c.id)}>

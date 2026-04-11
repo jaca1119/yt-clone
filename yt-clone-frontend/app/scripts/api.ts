@@ -22,6 +22,8 @@ export interface Comment {
   createdAt: string;
   createdBy: string;
   replyCount: number;
+  likes: number;
+  dislikes: number;
 }
 
 interface CommentResponse {
@@ -195,4 +197,28 @@ export async function getUserVideoInteractions(videoId: string) {
   );
 
   return res.data;
+}
+
+export async function toggleLikeComment(videoId: string, commentId: string) {
+  return await axios.post(
+    `http://localhost:8080/videos/${videoId}/comments/${commentId}/toggle-like`,
+    null,
+    {
+      headers: {
+        Authorization: "Bearer " + getAccessToken(),
+      },
+    },
+  );
+}
+
+export async function toggleDislikeComment(videoId: string, commentId: string) {
+  return await axios.post(
+    `http://localhost:8080/videos/${videoId}/comments/${commentId}/toggle-dislike`,
+    null,
+    {
+      headers: {
+        Authorization: "Bearer " + getAccessToken(),
+      },
+    },
+  );
 }
