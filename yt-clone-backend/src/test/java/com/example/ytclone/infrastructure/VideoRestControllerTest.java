@@ -358,13 +358,13 @@ public class VideoRestControllerTest {
         UUID id = startVideoUpload(differentUser);
         uploadVideo(id, differentUser);
 
-        //then default user should have 1 video
+        //then default user should have 2 videos
         mockMvcTester.get().uri("/videos/by-user")
                 .with(jwt())
                 .assertThat()
                 .bodyJson()
                 .convertTo(InstanceOfAssertFactories.LIST)
-                .hasSize(1);
+                .hasSize(2);
 
         //different user should have 1 video
         mockMvcTester.get().uri("/videos/by-user")
