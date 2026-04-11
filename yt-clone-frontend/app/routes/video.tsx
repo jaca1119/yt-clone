@@ -12,7 +12,9 @@ import {
   toggleLike,
   trackView,
   type Video,
-  type VideoRate,
+  type Rate,
+  getUserCommentInteractions,
+  type UserCommentInteraction,
 } from "~/scripts/api";
 import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
@@ -68,7 +70,10 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
     parentId: string;
     replies: Comment[];
   } | null>(null);
-  const [rate, setRate] = useState<VideoRate | null>(null);
+  const [rate, setRate] = useState<Rate | null>(null);
+  const [commentsInteractions, setCommentsInteractions] = useState<
+    UserCommentInteraction[]
+  >([]);
   const auth = useAuth();
 
   const currentOffset = useRef(10);
@@ -87,6 +92,19 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
       });
     }
   }, [params.id]);
+
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      getUserCommentInteractions(
+        params.id,
+        comments
+          .map((c) => c.id)
+          .concat(replies?.replies.map((c) => c.id) || []),
+      ).then((res) => {
+        setCommentsInteractions(res);
+      });
+    }
+  }, [params.id, currentOffset.current, replies]);
 
   async function showMore() {
     const nextCommentsPage = await getVideoComments(
@@ -179,6 +197,9 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
                 dislikes={c.dislikes}
                 commentId={c.id}
                 videoId={video.id}
+                initialRate={
+                  commentsInteractions.find((i) => i.commentId === c.id)?.rate
+                }
               >
                 {c.replyCount !== 0 && (
                   <Button variant="ghost" onClick={() => toggleReplies(c.id)}>
@@ -199,7 +220,15 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
                         content={r.content}
                         user={r.createdBy}
                         createdAt={r.createdAt}
-                      ></CommentComponent>
+                        commentId={r.id}
+                        videoId={video.id}
+                        likes={r.likes}
+                        dislikes={r.dislikes}
+                        initialRate={
+                          commentsInteractions.find((i) => i.commentId === r.id)
+                            ?.rate
+                        }
+                      />
                     ))}
                   </div>
                 )}

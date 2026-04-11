@@ -3,7 +3,11 @@ import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
 import LocalizedFormat from "dayjs/plugin/localizedFormat";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
-import { toggleDislikeComment, toggleLikeComment } from "~/scripts/api";
+import {
+  toggleDislikeComment,
+  toggleLikeComment,
+  type Rate,
+} from "~/scripts/api";
 dayjs.extend(LocalizedFormat);
 dayjs.extend(RelativeTime);
 
@@ -16,6 +20,7 @@ export default function Comment({
   dislikes,
   commentId,
   videoId,
+  initialRate,
   children,
 }: {
   className: string;
@@ -26,6 +31,7 @@ export default function Comment({
   dislikes: number;
   commentId: string;
   videoId: string;
+  initialRate?: Rate | null;
   children?: React.ReactNode;
 }) {
   return (
@@ -47,7 +53,7 @@ export default function Comment({
                 size="sm"
                 onClick={() => toggleLikeComment(videoId, commentId)}
               >
-                <ThumbsUp />
+                <ThumbsUp fill={initialRate === "LIKE" ? "black" : "none"} />
               </Button>
               {likes > 0 && <span className="text-xs">{likes}</span>}
             </div>
@@ -57,7 +63,9 @@ export default function Comment({
                 size="sm"
                 onClick={() => toggleDislikeComment(videoId, commentId)}
               >
-                <ThumbsDown />
+                <ThumbsDown
+                  fill={initialRate === "DISLIKE" ? "black" : "none"}
+                />
               </Button>
               {dislikes > 0 && <span className="text-xs">{dislikes}</span>}
             </div>

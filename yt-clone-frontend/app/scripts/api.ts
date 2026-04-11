@@ -35,10 +35,15 @@ interface CommentsPageOffset {
   hasNext: boolean;
 }
 
-export type VideoRate = "LIKE" | "DISLIKE";
+export type Rate = "LIKE" | "DISLIKE";
 
 interface UserVideoInteractions {
-  rate: VideoRate | null;
+  rate: Rate | null;
+}
+
+export interface UserCommentInteraction {
+  commentId: string;
+  rate: Rate | null;
 }
 
 export async function getAllVideos() {
@@ -221,4 +226,21 @@ export async function toggleDislikeComment(videoId: string, commentId: string) {
       },
     },
   );
+}
+
+export async function getUserCommentInteractions(
+  videoId: string,
+  commentIds: string[],
+) {
+  const res = await axios.post<UserCommentInteraction[]>(
+    `http://localhost:8080/videos/${videoId}/comments/user-interactions`,
+    commentIds,
+    {
+      headers: {
+        Authorization: "Bearer " + getAccessToken(),
+      },
+    },
+  );
+
+  return res.data;
 }
