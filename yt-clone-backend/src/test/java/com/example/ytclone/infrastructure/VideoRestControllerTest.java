@@ -61,6 +61,7 @@ public class VideoRestControllerTest {
 
     static File testUploadFile;
     UUID videoId;
+    UUID videoId2;
 
     @BeforeAll
     static void setUp() throws IOException, InterruptedException {
@@ -78,11 +79,14 @@ public class VideoRestControllerTest {
     void setUpTest() throws Exception {
         videoId = startVideoUpload();
         uploadVideo(videoId);
+        videoId2 = startVideoUpload();
+        uploadVideo(videoId2);
     }
 
     @AfterEach
     void cleanupTest() {
         deleteVideo(videoId);
+        deleteVideo(videoId2);
     }
 
     @Test
@@ -821,6 +825,84 @@ public class VideoRestControllerTest {
                 .extracting(CommentsPageOffset::comments)
                 .asInstanceOf(InstanceOfAssertFactories.list(CommentDTO.class))
                 .anyMatch(c -> c.likes() == 6 && c.dislikes() == 5);
+    }
+
+    @Test
+    void shouldRateMultipleVideos() {
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> assertThat(video.getLikes()).isZero());
+
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId2)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> assertThat(video.getLikes()).isZero());
+
+
+        mockMvcTester.post().uri("/videos/{videoId}/toggle-like", videoId)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.post().uri("/videos/{videoId}/toggle-dislike", videoId2)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> {
+                    assertThat(video.getLikes()).isOne();
+                    assertThat(video.getDislikes()).isZero();
+                });
+
+        mockMvcTester.get().uri("/videos/{videoId}/metadata", videoId2)
+                .assertThat()
+                .bodyJson()
+                .convertTo(Video.class)
+                .satisfies(video -> {
+                    assertThat(video.getLikes()).isZero();
+                    assertThat(video.getDislikes()).isOne();
+                });
+    }
+
+    @Test
+    void shouldRateMultipleComments() {
+        List<UUID> comments = createComments(10);
+        mockMvcTester.post().uri("/videos/{videoId}/comments/user-interactions", videoId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(List.of(comments.get(0), comments.get(1))))
+                .with(jwt())
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.list(UserVideoInteractionDTO.class))
+                .hasSize(0);
+
+        mockMvcTester.post().uri("/videos/{videoId}/comments/{commentId}/toggle-like", videoId, comments.get(0))
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.post().uri("/videos/{videoId}/comments/{commentId}/toggle-dislike", videoId, comments.get(1))
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.post().uri("/videos/{videoId}/comments/user-interactions", videoId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(List.of(comments.get(0), comments.get(1))))
+                .with(jwt())
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.list(UserCommentInteractionDTO.class))
+                .hasSize(2)
+                .anyMatch(u -> u.commentId().equals(comments.getFirst()) && u.rate().equals("LIKE"))
+                .anyMatch(u -> u.commentId().equals(comments.get(1)) && u.rate().equals("DISLIKE"));
     }
 
     List<UUID> createComments() {
