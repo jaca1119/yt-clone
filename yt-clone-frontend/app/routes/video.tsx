@@ -18,6 +18,7 @@ import dayjs from "dayjs";
 import RelativeTime from "dayjs/plugin/relativeTime";
 import { Avatar, Button, ButtonGroup } from "@heroui/react";
 import AddComment from "~/components/add-comment";
+import CommentComponent from "~/components/comment";
 import { useAuth } from "react-oidc-context";
 import { ChevronDown, ChevronUp, ThumbsDown, ThumbsUp } from "lucide-react";
 dayjs.extend(LocalizedFormat);
@@ -168,73 +169,53 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
           <p className="font-bold text-xl">Comments</p>
           <div>
             {comments.map((c) => (
-              <div key={c.id} className="flex gap-2 my-3">
-                <Avatar>
-                  <Avatar.Fallback>{c.createdBy.at(0)}</Avatar.Fallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm">
-                    <span>{c.createdBy} </span>
-                    <span className="text-gray-500">
-                      {dayjs(c.createdAt).fromNow()}
-                    </span>
-                  </p>
+              <CommentComponent
+                key={c.id}
+                className="flex gap-2 my-3"
+                content={c.content}
+                user={c.createdBy}
+                createdAt={c.createdAt}
+              >
+                {c.replyCount !== 0 && (
+                  <Button variant="ghost" onClick={() => toggleReplies(c.id)}>
+                    Replies {c.replyCount}
+                    {replies?.parentId === c.id ? (
+                      <ChevronUp />
+                    ) : (
+                      <ChevronDown />
+                    )}
+                  </Button>
+                )}
+                {replies?.parentId === c.id && (
                   <div>
-                    <p>{c.content}</p>
-                    {c.replyCount !== 0 && (
-                      <Button
-                        variant="ghost"
-                        onClick={() => toggleReplies(c.id)}
-                      >
-                        Replies {c.replyCount}
-                        {replies?.parentId === c.id ? (
-                          <ChevronUp />
-                        ) : (
-                          <ChevronDown />
-                        )}
-                      </Button>
-                    )}
-                    {replies?.parentId === c.id && (
-                      <div>
-                        {replies.replies.map((r) => (
-                          <div className="flex gap-2 my-3">
-                            <Avatar>
-                              <Avatar.Fallback>
-                                {r.createdBy.at(0)}
-                              </Avatar.Fallback>
-                            </Avatar>
-                            <div>
-                              <p className="text-sm">
-                                <span>{r.createdBy} </span>
-                                <span className="text-gray-500">
-                                  {dayjs(r.createdAt).fromNow()}
-                                </span>
-                              </p>
-                              <p>{r.content}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {auth.isAuthenticated && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setReplyId(c.id)}
-                        >
-                          Reply
-                        </Button>
-                        {replyId === c.id && (
-                          <AddComment videoId={video.id} replyId={c.id}>
-                            Add reply:
-                          </AddComment>
-                        )}
-                      </>
-                    )}
+                    {replies.replies.map((r) => (
+                      <CommentComponent
+                        key={r.id}
+                        className="flex gap-2 my-3"
+                        content={r.content}
+                        user={r.createdBy}
+                        createdAt={r.createdAt}
+                      ></CommentComponent>
+                    ))}
                   </div>
-                </div>
-              </div>
+                )}
+                {auth.isAuthenticated && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setReplyId(c.id)}
+                    >
+                      Reply
+                    </Button>
+                    {replyId === c.id && (
+                      <AddComment videoId={video.id} replyId={c.id}>
+                        Add reply:
+                      </AddComment>
+                    )}
+                  </>
+                )}
+              </CommentComponent>
             ))}
             {hasNext && (
               <>
