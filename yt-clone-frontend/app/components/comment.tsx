@@ -40,8 +40,8 @@ export default function Comment({
         </p>
         <div>
           <p>{content}</p>
-          <div className="flex">
-            <div>
+          <div className="flex gap-1">
+            <div className="flex items-center">
               <Button
                 variant="ghost"
                 size="sm"
@@ -51,7 +51,7 @@ export default function Comment({
               </Button>
               {likes > 0 && <span className="text-xs">{likes}</span>}
             </div>
-            <div>
+            <div className="flex items-center">
               <Button
                 variant="ghost"
                 size="sm"
