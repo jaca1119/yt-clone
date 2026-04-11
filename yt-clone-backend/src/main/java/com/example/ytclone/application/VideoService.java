@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
 /*
 It shouldn't return objects from the infrastructure. It should throw domain exceptions that are mapped by web layer instead of ResponseStatusException
  */
@@ -31,12 +32,14 @@ public class VideoService {
     private final CommentRepository commentRepository;
     private final VideoProcessor videoProcessor;
     private final UserVideoInteractionRepository userVideoInteractionRepository;
+    private final UserCommentInteractionRepository userCommentInteractionRepository;
 
-    public VideoService(VideoRepository videoRepository, CommentRepository commentRepository, VideoProcessor videoProcessor, UserVideoInteractionRepository userVideoInteractionRepository) {
+    public VideoService(VideoRepository videoRepository, CommentRepository commentRepository, VideoProcessor videoProcessor, UserVideoInteractionRepository userVideoInteractionRepository, UserCommentInteractionRepository userCommentInteractionRepository) {
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
         this.videoProcessor = videoProcessor;
         this.userVideoInteractionRepository = userVideoInteractionRepository;
+        this.userCommentInteractionRepository = userCommentInteractionRepository;
     }
 
     public Optional<Video> getVideo(UUID id) {
@@ -149,7 +152,7 @@ public class VideoService {
     public UUID comment(UUID videoId, String comment, String user, Optional<UUID> parentId) {
         VideoEntity videoEntity = videoRepository.findById(videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Optional<CommentEntity> optionalComment = parentId.map(id -> commentRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Parent comment not found")));
-        CommentEntity save = commentRepository.save(new CommentEntity(UUID.randomUUID(), comment, videoEntity, optionalComment.orElse(null), 0, 0, LocalDateTime.now(), user));
+        CommentEntity save = commentRepository.save(new CommentEntity(UUID.randomUUID(), comment, videoEntity, optionalComment.orElse(null), 0, 0, LocalDateTime.now(), user, null, 0));
         return save.getId();
     }
 
@@ -181,6 +184,35 @@ public class VideoService {
     public void toggleDislike(UUID videoId, String username) {
         VideoEntity video = videoRepository.findById(videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         toggleRate(video, username, VideoRate.DISLIKE);
+    }
+
+    public UserVideoInteractionEntity getUserInteractionForVideo(UUID videoId, String username) {
+        return userVideoInteractionRepository.findByUsernameAndVideoId(username, videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    public List<UserCommentInteractionEntity> getUserInteractionForComments(String username, List<String> commentsIds) {
+        return userCommentInteractionRepository.findAllByUsernameAndCommentIdIn(username, commentsIds.stream().map(UUID::fromString).toList());
+    }
+
+    @Transactional
+    public void toggleLikeForComment(UUID commentId, String username) {
+        CommentEntity commentEntity = commentRepository.findById(commentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        UserCommentInteractionEntity userCommentInteractionEntity = userCommentInteractionRepository.findByUsernameAndCommentId(username, commentId).orElseGet(() -> new UserCommentInteractionEntity(UUID.randomUUID(), username, commentEntity, new UserCommentInteraction(null)));
+
+        if (userCommentInteractionEntity.getUserCommentInteraction().getRate() == null) {
+            userCommentInteractionEntity.getUserCommentInteraction().setRate(CommentRate.LIKE);
+            commentEntity.setLikes(commentEntity.getLikes() + 1);
+        } else if (userCommentInteractionEntity.getUserCommentInteraction().getRate() == CommentRate.LIKE) {
+            userCommentInteractionEntity.getUserCommentInteraction().setRate(null);
+            commentEntity.setLikes(commentEntity.getLikes() - 1);
+        } else if (userCommentInteractionEntity.getUserCommentInteraction().getRate() == CommentRate.DISLIKE) {
+            userCommentInteractionEntity.getUserCommentInteraction().setRate(CommentRate.LIKE);
+            commentEntity.setLikes(commentEntity.getLikes() + 1);
+            commentEntity.setDislikes(commentEntity.getDislikes() - 1);
+        }
+
+        commentRepository.save(commentEntity);
+        userCommentInteractionRepository.save(userCommentInteractionEntity);
     }
 
     private void toggleRate(VideoEntity video, String username, VideoRate rate) {
@@ -215,10 +247,6 @@ public class VideoService {
         }
 
         userVideoInteractionRepository.save(userVideoInteractionEntity);
-    }
-
-    public UserVideoInteractionEntity getUserInteractionForVideo(UUID videoId, String username) {
-        return userVideoInteractionRepository.findByUsernameAndVideoId(username, videoId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
     private Video toVideo(VideoEntity videoEntity) {

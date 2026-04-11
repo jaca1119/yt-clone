@@ -2,8 +2,10 @@ package com.example.ytclone.infrastructure.persistence;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -28,4 +30,10 @@ public class CommentEntity {
 
     private LocalDateTime createdAt;
     private String createdBy;
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.REMOVE)
+    private Set<UserCommentInteractionEntity> userCommentInteractions;
+
+    @Version
+    @ColumnDefault("0")
+    private long version;
 }

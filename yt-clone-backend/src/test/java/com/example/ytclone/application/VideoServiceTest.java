@@ -23,7 +23,7 @@ public class VideoServiceTest {
     VideoRepository videoRepository = new InMemoryVideoRepository();
     CommentRepository commentRepository = Mockito.mock();
     VideoProcessor videoProcessor = Mockito.mock();
-    VideoService videoService = new VideoService(videoRepository, commentRepository, videoProcessor, Mockito.mock());
+    VideoService videoService = new VideoService(videoRepository, commentRepository, videoProcessor, Mockito.mock(), Mockito.mock());
 
     @Test
     void shouldReturnPathToVideoFile() {

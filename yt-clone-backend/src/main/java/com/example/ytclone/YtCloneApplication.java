@@ -135,7 +135,7 @@ public class YtCloneApplication implements ApplicationRunner {
             start = Instant.now();
             allVideos.forEach(v -> {
                 for (int i = 0; i < numOfComments; i++) {
-                    commentRepository.save(new CommentEntity(UUID.randomUUID(), "Test content " + i, v, null, 0, 0, LocalDateTime.now(), "system"));
+                    commentRepository.save(new CommentEntity(UUID.randomUUID(), "Test content " + i, v, null, 0, 0, LocalDateTime.now(), "system", null, 0));
                 }
             });
             log.info("Save all comments duration: {}", Duration.between(start, Instant.now()));

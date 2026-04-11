@@ -3,6 +3,7 @@ package com.example.ytclone.infrastructure.web;
 import com.example.ytclone.application.VideoService;
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.persistence.CommentDTO;
+import com.example.ytclone.infrastructure.persistence.UserCommentInteractionEntity;
 import com.example.ytclone.infrastructure.persistence.UserVideoInteractionEntity;
 import com.example.ytclone.infrastructure.web.dto.*;
 import jakarta.validation.Valid;
@@ -157,5 +158,17 @@ public class VideoRestController {
     public ResponseEntity<UserVideoInteractionDTO> getUserInteractionsForVideo(@PathVariable UUID videoId, @AuthenticationPrincipal Jwt jwt) {
         UserVideoInteractionEntity userInteractionForVideo = videoService.getUserInteractionForVideo(videoId, jwt.getSubject());
         return ResponseEntity.ok(new UserVideoInteractionDTO(Optional.ofNullable(userInteractionForVideo.getRate())));
+    }
+
+    @PostMapping("/{videoId}/comments/user-interactions")
+    public ResponseEntity<List<UserCommentInteractionDTO>> getUserInteractionsForComments(@PathVariable UUID videoId, @AuthenticationPrincipal Jwt jwt, @RequestBody List<String> commentsIds) {
+        List<UserCommentInteractionEntity> userInteractionForComments = videoService.getUserInteractionForComments(jwt.getSubject(), commentsIds);
+        return ResponseEntity.ok(userInteractionForComments.stream().map(c -> new UserCommentInteractionDTO(c.getComment().getId(), c.getUserCommentInteraction().getRate().name())).toList());
+    }
+
+    @PostMapping("/{videoId}/comments/{commentId}/toggle-like")
+    public ResponseEntity toggleLike(@PathVariable UUID videoId, @PathVariable UUID commentId, @AuthenticationPrincipal Jwt jwt) {
+        videoService.toggleLikeForComment(commentId, jwt.getSubject());
+        return ResponseEntity.ok().build();
     }
 }

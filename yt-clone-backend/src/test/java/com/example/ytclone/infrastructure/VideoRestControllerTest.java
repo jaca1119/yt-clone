@@ -685,6 +685,61 @@ public class VideoRestControllerTest {
                 .satisfies(video -> assertThat(video.rate()).hasValue(VideoRate.DISLIKE));
     }
 
+    @Test
+    void shouldRateComment() {
+        List<UUID> comments = createComments(10);
+        mockMvcTester.post().uri("/videos/{videoId}/comments/user-interactions", videoId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(List.of(comments.get(0), comments.get(1))))
+                .with(jwt())
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.list(UserVideoInteractionDTO.class))
+                .hasSize(0);
+
+        mockMvcTester.post().uri("/videos/{videoId}/comments/{commentId}/toggle-like", videoId, comments.get(0))
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        mockMvcTester.post().uri("/videos/{videoId}/comments/user-interactions", videoId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(List.of(comments.get(0), comments.get(1))))
+                .with(jwt())
+                .assertThat()
+                .bodyJson()
+                .convertTo(InstanceOfAssertFactories.list(UserCommentInteractionDTO.class))
+                .hasSize(1)
+                .anyMatch(u -> u.commentId().equals(comments.getFirst()) && u.rate().equals("LIKE"));
+
+        mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(CommentsPageOffset.class)
+                .satisfies(c -> assertThat(c.comments()).hasSize(10))
+                .extracting(CommentsPageOffset::comments)
+                .asInstanceOf(InstanceOfAssertFactories.list(CommentDTO.class))
+                .anyMatch(c -> c.likes() == 1);
+
+        //add ten likes from different users to same comment
+        for (int i = 0; i < 10; i++) {
+            int finalI = i;
+            mockMvcTester.post().uri("/videos/{videoId}/comments/{commentId}/toggle-like", videoId, comments.get(0))
+                    .with(jwt().jwt(jwt -> jwt.subject("user" + finalI)))
+                    .assertThat()
+                    .hasStatus(HttpStatus.OK);
+        }
+
+        mockMvcTester.get().uri("/videos/{videoId}/comments/newest", videoId)
+                .assertThat()
+                .bodyJson()
+                .convertTo(CommentsPageOffset.class)
+                .satisfies(c -> assertThat(c.comments()).hasSize(10))
+                .extracting(CommentsPageOffset::comments)
+                .asInstanceOf(InstanceOfAssertFactories.list(CommentDTO.class))
+                .anyMatch(c -> c.likes() == 11);
+    }
+
     List<UUID> createComments() {
         return createComments(100);
     }
