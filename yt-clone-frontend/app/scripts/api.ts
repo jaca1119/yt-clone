@@ -192,16 +192,22 @@ export async function toggleDislike(videoId: string) {
 }
 
 export async function getUserVideoInteractions(videoId: string) {
-  const res = await axios.get<UserVideoInteractions>(
-    `http://localhost:8080/videos/${videoId}/user-interactions`,
-    {
-      headers: {
-        Authorization: "Bearer " + getAccessToken(),
+  try {
+    const res = await axios.get<UserVideoInteractions>(
+      `http://localhost:8080/videos/${videoId}/user-interactions`,
+      {
+        headers: {
+          Authorization: "Bearer " + getAccessToken(),
+        },
       },
-    },
-  );
+    );
 
-  return res.data;
+    return res.data;
+  } catch (err) {
+    return {
+      rate: null,
+    };
+  }
 }
 
 export async function toggleLikeComment(videoId: string, commentId: string) {
