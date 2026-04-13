@@ -1,11 +1,14 @@
 package com.example.ytclone.infrastructure.persistence;
 
-import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.jspecify.annotations.NonNull;
 
 import java.util.UUID;
 
@@ -23,6 +26,8 @@ public class UserVideoInteractionEntity {
     @EqualsAndHashCode.Exclude
     @ManyToOne
     private VideoEntity video;
-    @Nullable
-    private VideoRate rate;
+    @NonNull
+    @NotNull
+    @JdbcTypeCode(SqlTypes.JSON)
+    private UserVideoInteraction userVideoInteraction;
 }

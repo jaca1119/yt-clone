@@ -157,7 +157,7 @@ public class VideoRestController {
     @GetMapping("/{videoId}/user-interactions")
     public ResponseEntity<UserVideoInteractionDTO> getUserInteractionsForVideo(@PathVariable UUID videoId, @AuthenticationPrincipal Jwt jwt) {
         UserVideoInteractionEntity userInteractionForVideo = videoService.getUserInteractionForVideo(videoId, jwt.getSubject());
-        return ResponseEntity.ok(new UserVideoInteractionDTO(Optional.ofNullable(userInteractionForVideo.getRate())));
+        return ResponseEntity.ok(new UserVideoInteractionDTO(Optional.ofNullable(userInteractionForVideo.getUserVideoInteraction().getRate())));
     }
 
     @PostMapping("/{videoId}/comments/user-interactions")

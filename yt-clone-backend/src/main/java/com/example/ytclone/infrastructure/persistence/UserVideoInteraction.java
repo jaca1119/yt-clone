@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public final class UserCommentInteraction {
+public class UserVideoInteraction {
     @Nullable
-    private CommentRate rate;
+    private VideoRate rate;
 }

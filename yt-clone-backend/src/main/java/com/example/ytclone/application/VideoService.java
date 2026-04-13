@@ -242,31 +242,30 @@ public class VideoService {
     }
 
     private void toggleRate(VideoEntity video, String username, VideoRate rate) {
-        UserVideoInteractionEntity userVideoInteractionEntity = userVideoInteractionRepository.findByUsernameAndVideoId(username, video.getId()).orElseGet(() -> new UserVideoInteractionEntity(UUID.randomUUID(), username, video, null));
-
-        if (userVideoInteractionEntity.getRate() == null) {
+        UserVideoInteractionEntity userVideoInteractionEntity = userVideoInteractionRepository.findByUsernameAndVideoId(username, video.getId()).orElseGet(() -> new UserVideoInteractionEntity(UUID.randomUUID(), username, video, new UserVideoInteraction()));
+        if (userVideoInteractionEntity.getUserVideoInteraction().getRate() == null) {
             if (rate == VideoRate.LIKE) {
-                userVideoInteractionEntity.setRate(VideoRate.LIKE);
+                userVideoInteractionEntity.getUserVideoInteraction().setRate(VideoRate.LIKE);
                 video.setLikes(video.getLikes() + 1);
             } else if (rate == VideoRate.DISLIKE) {
-                userVideoInteractionEntity.setRate(VideoRate.DISLIKE);
+                userVideoInteractionEntity.getUserVideoInteraction().setRate(VideoRate.DISLIKE);
                 video.setDislikes(video.getDislikes() + 1);
             }
-        } else if (userVideoInteractionEntity.getRate() == rate) {
+        } else if (userVideoInteractionEntity.getUserVideoInteraction().getRate() == rate) {
             if (rate == VideoRate.LIKE) {
-                userVideoInteractionEntity.setRate(null);
+                userVideoInteractionEntity.getUserVideoInteraction().setRate(null);
                 video.setLikes(video.getLikes() - 1);
             } else if (rate == VideoRate.DISLIKE) {
-                userVideoInteractionEntity.setRate(null);
+                userVideoInteractionEntity.getUserVideoInteraction().setRate(null);
                 video.setDislikes(video.getDislikes() - 1);
             }
         } else {
             if (rate == VideoRate.LIKE) {
-                userVideoInteractionEntity.setRate(VideoRate.LIKE);
+                userVideoInteractionEntity.getUserVideoInteraction().setRate(VideoRate.LIKE);
                 video.setLikes(video.getLikes() + 1);
                 video.setDislikes(video.getDislikes() - 1);
             } else if (rate == VideoRate.DISLIKE) {
-                userVideoInteractionEntity.setRate(VideoRate.DISLIKE);
+                userVideoInteractionEntity.getUserVideoInteraction().setRate(VideoRate.DISLIKE);
                 video.setLikes(video.getLikes() - 1);
                 video.setDislikes(video.getDislikes() + 1);
             }
