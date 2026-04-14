@@ -160,7 +160,7 @@ public class VideoRestControllerTest {
     }
 
     @Test
-    void shouldUploadVideoForUser() throws Exception {
+    void shouldUploadVideoForUserAndGenerateThumbnailPreview() throws Exception {
         String initialTitle = "test title";
         MockMultipartFile file = new MockMultipartFile("file", testUploadFile.getName(), "video/mp4", Files.newInputStream(testUploadFile.toPath()));
         //given initial videos
@@ -192,6 +192,11 @@ public class VideoRestControllerTest {
                     assertThat(video.getCreator()).isEqualTo("user");
                     assertThat(video.getTitle()).isEqualTo(initialTitle);
                 });
+
+        //then expect preview thumbnail file is generated
+        //need quick wait before preview file is generated
+        Thread.sleep(Duration.ofSeconds(1));
+        assertThat(Path.of("videos/preview_thumbnails/%s.jpg".formatted(videoUploadResponse.videoId()))).exists();
 
         //cleanup
         deleteVideo(videoUploadResponse.videoId());

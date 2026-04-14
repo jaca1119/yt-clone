@@ -28,6 +28,7 @@ It shouldn't return objects from the infrastructure. It should throw domain exce
 public class VideoService {
     private final Path videosDirectory = Path.of("videos").toAbsolutePath();
     private final Path thumbnailsDirectory = Path.of("videos/thumbnails").toAbsolutePath();
+    private final Path previewDirectory = Path.of("videos/preview_thumbnails").toAbsolutePath();
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
     private final VideoProcessor videoProcessor;
@@ -88,6 +89,8 @@ public class VideoService {
                     file.delete();
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND);
                 });
+
+        videoProcessor.generatePreviewThumbnailsSprite(file);
     }
 
     @Transactional
@@ -115,12 +118,14 @@ public class VideoService {
                             }
 
                             Path videoFile = videosDirectory.resolve(entity.getFilename()).normalize();
-                            Path thumbnail = thumbnailsDirectory.resolve(entity.getFilename().substring(0, entity.getFilename().lastIndexOf(".mp4")) + ".jpg").normalize();
+                            String filenameWithoutExtension = entity.getFilename().substring(0, entity.getFilename().lastIndexOf(".mp4"));
+                            Path thumbnail = thumbnailsDirectory.resolve(filenameWithoutExtension + ".jpg").normalize();
+                            Path preview = previewDirectory.resolve(filenameWithoutExtension + ".jpg").normalize();
 
-                            if (videoFile.toString().contains("..") || thumbnail.toString().contains("..")) {
+                            if (videoFile.toString().contains("..") || thumbnail.toString().contains("..") || preview.toString().contains("..")) {
                                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
                             }
-                            if (!videoFile.toString().contains("/videos/") || !thumbnail.toString().contains("/videos/thumbnails/")) {
+                            if (!videoFile.toString().contains("/videos/") || !thumbnail.toString().contains("/videos/thumbnails/") || !preview.toString().contains("/videos/preview_thumbnails/")) {
                                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
                             }
 
@@ -138,6 +143,15 @@ public class VideoService {
                                 try {
                                     Files.deleteIfExists(thumbnail);
                                     log.info("Deleted thumbnail {}", id);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+
+                            if (Files.isRegularFile(preview)) {
+                                try {
+                                    Files.deleteIfExists(preview);
+                                    log.info("Deleted preview {}", id);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }

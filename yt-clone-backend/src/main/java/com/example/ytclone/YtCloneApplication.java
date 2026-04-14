@@ -10,6 +10,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -27,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
+@EnableAsync
 @SpringBootApplication
 public class YtCloneApplication implements ApplicationRunner {
     @Autowired
@@ -46,6 +48,7 @@ public class YtCloneApplication implements ApplicationRunner {
         Path videosDir = Path.of("videos");
         Files.createDirectories(videosDir);
         Files.createDirectories(Path.of("videos/thumbnails"));
+        Files.createDirectories(Path.of("videos/preview_thumbnails"));
 
         log.info("Args: {}", Arrays.toString(args.getSourceArgs()));
 
