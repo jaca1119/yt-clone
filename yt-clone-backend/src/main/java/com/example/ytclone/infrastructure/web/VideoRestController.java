@@ -76,6 +76,18 @@ public class VideoRestController {
         return ResponseEntity.of(thumbnail);
     }
 
+    @GetMapping(value = "/{id}/preview_thumbnails", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<Resource> getVideoPreviewThumbnails(@PathVariable UUID id) {
+        Optional<Resource> thumbnail = videoService.getVideoPreviewThumbnailsFilePath(id).map(FileSystemResource::new);
+        return ResponseEntity.of(thumbnail);
+    }
+
+    @GetMapping(value = "/{id}/preview_thumbnails_vtt", produces = "text/vtt")
+    public ResponseEntity<Resource> getVideoPreviewThumbnailsVTT(@PathVariable UUID id) {
+        Optional<Resource> thumbnail = videoService.getVideoPreviewThumbnailsVTTFilePath(id).map(FileSystemResource::new);
+        return ResponseEntity.of(thumbnail);
+    }
+
     @PostMapping
     public ResponseEntity<VideoUploadResponse> startVideoUpload(@RequestBody @Valid VideoUploadRequest videoUploadRequest, @AuthenticationPrincipal Jwt jwt) {
         UUID id = videoService.startVideoUpload(videoUploadRequest.title(), jwt.getSubject(), LocalDateTime.now());

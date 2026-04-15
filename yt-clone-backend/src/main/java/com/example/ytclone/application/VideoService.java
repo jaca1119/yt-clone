@@ -65,6 +65,16 @@ public class VideoService {
                 .map(video -> Path.of("videos/thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath());
     }
 
+    public Optional<Path> getVideoPreviewThumbnailsFilePath(UUID id) {
+        return videoRepository.findById(id)
+                .map(video -> Path.of("videos/preview_thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath());
+    }
+
+    public Optional<Path> getVideoPreviewThumbnailsVTTFilePath(UUID id) {
+        return videoRepository.findById(id)
+                .map(video -> Path.of("videos/preview_thumbnails/%s.vtt".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath());
+    }
+
     @Transactional
     public UUID startVideoUpload(String title, String user, LocalDateTime uploadTime) {
         UUID id = UUID.randomUUID();

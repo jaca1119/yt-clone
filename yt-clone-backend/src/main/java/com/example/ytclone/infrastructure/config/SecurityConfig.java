@@ -47,7 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/videos/{id}/comments/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/videos/{id}/comments/*/newest").permitAll()
                         .requestMatchers(HttpMethod.POST, "/videos/{id}/views").permitAll()
-                        .requestMatchers("/videos/*/thumbnail").permitAll()
+                        .requestMatchers("/videos/*/thumbnail", "/videos/*/preview_thumbnails", "/videos/*/preview_thumbnails_vtt").permitAll()
                         .requestMatchers("/videos/*/metadata").permitAll()
                         .requestMatchers("/videos/*").authenticated()
                         .anyRequest().authenticated()

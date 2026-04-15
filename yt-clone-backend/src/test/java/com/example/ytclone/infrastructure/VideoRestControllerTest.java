@@ -1,6 +1,8 @@
 package com.example.ytclone.infrastructure;
 
+import com.example.ytclone.AsyncTestConfig;
 import com.example.ytclone.TestcontainersConfiguration;
+import com.example.ytclone.VideoTestUtils;
 import com.example.ytclone.domain.Video;
 import com.example.ytclone.infrastructure.persistence.CommentDTO;
 import com.example.ytclone.infrastructure.persistence.VideoRate;
@@ -44,7 +46,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, AsyncTestConfig.class})
 //mock server, when resttestclient then security is omitted but when used with mockmvc then it test also security layer
 @SpringBootTest
 @AutoConfigureRestTestClient
@@ -194,8 +196,6 @@ public class VideoRestControllerTest {
                 });
 
         //then expect preview thumbnail file is generated
-        //need quick wait before preview file is generated
-        Thread.sleep(Duration.ofSeconds(1));
         assertThat(Path.of("videos/preview_thumbnails/%s.jpg".formatted(videoUploadResponse.videoId()))).exists();
 
         //cleanup
@@ -908,6 +908,25 @@ public class VideoRestControllerTest {
                 .hasSize(2)
                 .anyMatch(u -> u.commentId().equals(comments.getFirst()) && u.rate().equals("LIKE"))
                 .anyMatch(u -> u.commentId().equals(comments.get(1)) && u.rate().equals("DISLIKE"));
+    }
+
+    @Test
+    void shouldGetVideoPreviewThumbnailsAndWEBVTT() throws IOException {
+        mockMvcTester.get().uri("/videos/{videoId}/preview_thumbnails", videoId)
+                .assertThat()
+                .hasStatus(HttpStatus.OK)
+                .hasContentType(MediaType.IMAGE_JPEG)
+                .body().isEqualTo(Files.readAllBytes(VideoTestUtils.THUMBNAIL_PREVIEW_REST));
+
+        mockMvcTester.get().uri("/videos/{videoId}/preview_thumbnails_vtt", videoId)
+                .assertThat()
+                .hasStatus(HttpStatus.OK)
+                .hasContentType("text/vtt")
+                .bodyText().startsWith("""
+                        WEBVTT
+                        
+                        00:00:00.000 --> 00:00:05.000
+                        """);
     }
 
     List<UUID> createComments() {
