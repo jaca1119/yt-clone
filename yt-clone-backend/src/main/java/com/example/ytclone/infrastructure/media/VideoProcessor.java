@@ -69,8 +69,8 @@ public class VideoProcessor {
                 "5", //higher worse quality but faster
                 "-frames:v", //generate number of frames
                 "1", // generate just one frame (one big sprite file)
-                "-fps_mode",
-                "vfr",
+                "-fps_mode", //framerate mode
+                "vfr", //variable framerate don't make duplicates
                 "-y", //override file if exist
                 "-loglevel", //set loglevel
                 "error", //log only errors
