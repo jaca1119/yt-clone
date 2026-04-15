@@ -57,22 +57,50 @@ public class VideoService {
 
     public Optional<Path> getVideoFilePath(UUID id) {
         return videoRepository.findById(id)
-                .map(video -> Path.of("videos/%s".formatted(video.getFilename())).toAbsolutePath());
+                .map(video -> {
+                    Path resource = Path.of("videos/%s".formatted(video.getFilename())).toAbsolutePath();
+                    if (Files.exists(resource)) {
+                        return resource;
+                    } else {
+                        return null;
+                    }
+                });
     }
 
     public Optional<Path> getVideoThumbnailFilePath(UUID id) {
         return videoRepository.findById(id)
-                .map(video -> Path.of("videos/thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath());
+                .map(video -> {
+                    Path resource = Path.of("videos/thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath();
+                    if (Files.exists(resource)) {
+                        return resource;
+                    } else {
+                        return null;
+                    }
+                });
     }
 
     public Optional<Path> getVideoPreviewThumbnailsFilePath(UUID id) {
         return videoRepository.findById(id)
-                .map(video -> Path.of("videos/preview_thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath());
+                .map(video -> {
+                    Path resource = Path.of("videos/preview_thumbnails/%s.jpg".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath();
+                    if (Files.exists(resource)) {
+                        return resource;
+                    } else {
+                        return null;
+                    }
+                });
     }
 
     public Optional<Path> getVideoPreviewThumbnailsVTTFilePath(UUID id) {
         return videoRepository.findById(id)
-                .map(video -> Path.of("videos/preview_thumbnails/%s.vtt".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath());
+                .map(video -> {
+                    Path resource = Path.of("videos/preview_thumbnails/%s.vtt".formatted(video.getFilename().split(".mp4")[0])).toAbsolutePath();
+                    if (Files.exists(resource)) {
+                        return resource;
+                    } else {
+                        return null;
+                    }
+                });
     }
 
     @Transactional
