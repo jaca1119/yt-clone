@@ -74,11 +74,11 @@ public class VideoProcessor {
             Process process = pb.start();
             process.waitFor(); //should use reasonable timeout but for longer videos it could take long
             List<String> errorOutput = process.errorReader().readAllLines();
-            if (errorOutput.isEmpty()) {
+            if (!errorOutput.isEmpty()) {
                 log.error("Generation of preview thumbnails error: {}", errorOutput);
-                return CompletableFuture.completedFuture(true);
-            } else {
                 return CompletableFuture.failedFuture(new RuntimeException(String.join(", ", errorOutput)));
+            } else {
+                return CompletableFuture.completedFuture(true);
             }
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
