@@ -7,7 +7,8 @@ import java.nio.file.Path;
 import java.time.Duration;
 
 public class VideoTestUtils {
-    public static final File THUMBNAIL_PREVIEW = new File("src/test/resources/expected_thumbanil_preview.jpg");
+    public static final Path THUMBNAIL_PREVIEW = Path.of("src/test/resources/expected_thumbnail_preview.jpg");
+    public static final Path PREVIEW_VTT = Path.of("src/test/resources/expected_thumbnail_preview.vtt");
     /**
      * Generate file with color bars and time counter
      * @return generated file

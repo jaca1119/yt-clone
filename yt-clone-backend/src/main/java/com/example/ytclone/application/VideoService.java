@@ -121,11 +121,12 @@ public class VideoService {
                             String filenameWithoutExtension = entity.getFilename().substring(0, entity.getFilename().lastIndexOf(".mp4"));
                             Path thumbnail = thumbnailsDirectory.resolve(filenameWithoutExtension + ".jpg").normalize();
                             Path preview = previewDirectory.resolve(filenameWithoutExtension + ".jpg").normalize();
+                            Path previewVTT = previewDirectory.resolve(filenameWithoutExtension + ".vtt").normalize();
 
-                            if (videoFile.toString().contains("..") || thumbnail.toString().contains("..") || preview.toString().contains("..")) {
+                            if (videoFile.toString().contains("..") || thumbnail.toString().contains("..") || preview.toString().contains("..") || previewVTT.toString().contains("..")) {
                                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
                             }
-                            if (!videoFile.toString().contains("/videos/") || !thumbnail.toString().contains("/videos/thumbnails/") || !preview.toString().contains("/videos/preview_thumbnails/")) {
+                            if (!videoFile.toString().contains("/videos/") || !thumbnail.toString().contains("/videos/thumbnails/") || !preview.toString().contains("/videos/preview_thumbnails/") || !previewVTT.toString().contains("/videos/preview_thumbnails/")) {
                                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
                             }
 
@@ -152,6 +153,15 @@ public class VideoService {
                                 try {
                                     Files.deleteIfExists(preview);
                                     log.info("Deleted preview {}", id);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+
+                            if (Files.isRegularFile(previewVTT)) {
+                                try {
+                                    Files.deleteIfExists(previewVTT);
+                                    log.info("Deleted previewVTT {}", id);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }
