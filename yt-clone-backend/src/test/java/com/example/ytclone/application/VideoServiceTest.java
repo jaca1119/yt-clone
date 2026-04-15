@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.File;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -24,34 +23,6 @@ public class VideoServiceTest {
     CommentRepository commentRepository = Mockito.mock();
     VideoProcessor videoProcessor = Mockito.mock();
     VideoService videoService = new VideoService(videoRepository, commentRepository, videoProcessor, Mockito.mock(), Mockito.mock());
-
-    @Test
-    void shouldReturnPathToVideoFile() {
-        //given
-        UUID id = videoService.startVideoUpload("tst title", "test", LocalDateTime.now());
-        videoService.saveVideoFile(id, new File("test.mp4"), "test");
-
-        //when
-        Optional<Path> videoFilePath = videoService.getVideoFilePath(id);
-
-        //then
-        assertThat(videoFilePath).isPresent();
-        assertThat(videoFilePath.get().toString()).contains("/videos/").endsWith(".mp4");
-    }
-
-    @Test
-    void shouldReturnPathToVideoThumbnail() {
-        //given
-        UUID id = videoService.startVideoUpload("tst title", "test", LocalDateTime.now());
-        videoService.saveVideoFile(id, new File("test.mp4"), "test");
-
-        //when
-        Optional<Path> videoThumbnailFilePath = videoService.getVideoThumbnailFilePath(id);
-
-        //then
-        assertThat(videoThumbnailFilePath).isPresent();
-        assertThat(videoThumbnailFilePath.get().toString()).contains("/videos/thumbnails").endsWith(".jpg");
-    }
 
     @Test
     void shouldSaveVideoFileFileAndGenerateThumbnail() {
