@@ -1,3 +1,4 @@
+import "@videojs/react/video/skin.css";
 import type { Route } from "./+types/video";
 import LocalizedFormat from "dayjs/plugin/localizedFormat";
 import { useEffect, useRef, useState } from "react";
@@ -23,6 +24,8 @@ import AddComment from "~/components/add-comment";
 import CommentComponent from "~/components/comment";
 import { useAuth } from "react-oidc-context";
 import { ChevronDown, ChevronUp, ThumbsDown, ThumbsUp } from "lucide-react";
+import { createPlayer, videoFeatures } from "@videojs/react";
+import { Video as VideoPlayer, VideoSkin } from "@videojs/react/video";
 dayjs.extend(LocalizedFormat);
 dayjs.extend(RelativeTime);
 
@@ -55,6 +58,8 @@ export async function clientAction({ request }: Route.ClientActionArgs) {
 
   return { ok: true };
 }
+
+const Player = createPlayer({ features: videoFeatures });
 
 export default function Video({ loaderData, params }: Route.ComponentProps) {
   const {
@@ -144,12 +149,24 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
 
   return (
     <div className="flex flex-col m-auto items-center w-full">
-      <video
-        className="w-full h-180"
-        controls
-        src={`http://localhost:8080/videos/${video.id}`}
-        poster={`http://localhost:8080/videos/${video.id}/thumbnail`}
-      ></video>
+      <div className="w-full h-180">
+        <Player.Provider>
+          <VideoSkin>
+            <VideoPlayer
+              src={`http://localhost:8080/videos/${video.id}`}
+              poster={`http://localhost:8080/videos/${video.id}/thumbnail`}
+              playsInline
+            >
+              <track
+                kind="metadata"
+                label="thumbnails"
+                src={`/videos/${video.id}/preview_thumbnails_vtt`}
+                default
+              />
+            </VideoPlayer>
+          </VideoSkin>
+        </Player.Provider>
+      </div>
       <div className="self-start pl-10 w-1/2">
         <p className="font-bold text-2xl">{video.title}</p>
 
