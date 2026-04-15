@@ -912,6 +912,8 @@ public class VideoRestControllerTest {
 
     @Test
     void shouldGetVideoPreviewThumbnailsAndWEBVTT() throws IOException {
+        String expectedVTT = Files.readString(VideoTestUtils.THUMBNAIL_PREVIEW_VTT_REST).replaceAll("\\{videoId}", videoId.toString());
+
         mockMvcTester.get().uri("/videos/{videoId}/preview_thumbnails", videoId)
                 .assertThat()
                 .hasStatus(HttpStatus.OK)
@@ -922,11 +924,7 @@ public class VideoRestControllerTest {
                 .assertThat()
                 .hasStatus(HttpStatus.OK)
                 .hasContentType("text/vtt")
-                .bodyText().startsWith("""
-                        WEBVTT
-                        
-                        00:00:00.000 --> 00:00:05.000
-                        """);
+                .bodyText().isEqualTo(expectedVTT);
     }
 
     List<UUID> createComments() {

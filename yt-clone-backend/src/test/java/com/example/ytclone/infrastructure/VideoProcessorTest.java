@@ -23,6 +23,6 @@ public class VideoProcessorTest {
         assertThat(previewThumbnailsGeneration).isCompletedWithValue(true);
         //basic comparison of files if matches exactly byte to byte. Might fail on different machine because generated files might be slightly different I guess
         assertThat(Path.of("videos/preview_thumbnails/testsrc.jpg")).hasSameBinaryContentAs(VideoTestUtils.THUMBNAIL_PREVIEW);
-        assertThat(Path.of("videos/preview_thumbnails/testsrc.vtt")).hasSameBinaryContentAs(VideoTestUtils.PREVIEW_VTT);
+        assertThat(Path.of("videos/preview_thumbnails/testsrc.vtt")).hasSameTextualContentAs(VideoTestUtils.PREVIEW_VTT);
     }
 }

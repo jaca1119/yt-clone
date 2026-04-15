@@ -1,23 +1,23 @@
 WEBVTT
 
 00:00:00.000 --> 00:00:05.000
-199a91e3-144f-4d4b-ad5f-a5069f90f6ca.jpg#xywh=0,0,160,90
+http://localhost:8080/videos/{videoId}/preview_thumbnails#xywh=0,0,160,90
 
 00:00:05.000 --> 00:00:10.000
-199a91e3-144f-4d4b-ad5f-a5069f90f6ca.jpg#xywh=160,0,160,90
+http://localhost:8080/videos/{videoId}/preview_thumbnails#xywh=160,0,160,90
 
 00:00:10.000 --> 00:00:15.000
-199a91e3-144f-4d4b-ad5f-a5069f90f6ca.jpg#xywh=320,0,160,90
+http://localhost:8080/videos/{videoId}/preview_thumbnails#xywh=320,0,160,90
 
 00:00:15.000 --> 00:00:20.000
-199a91e3-144f-4d4b-ad5f-a5069f90f6ca.jpg#xywh=480,0,160,90
+http://localhost:8080/videos/{videoId}/preview_thumbnails#xywh=480,0,160,90
 
 00:00:20.000 --> 00:00:25.000
-199a91e3-144f-4d4b-ad5f-a5069f90f6ca.jpg#xywh=640,0,160,90
+http://localhost:8080/videos/{videoId}/preview_thumbnails#xywh=640,0,160,90
 
 00:00:25.000 --> 00:00:30.000
-199a91e3-144f-4d4b-ad5f-a5069f90f6ca.jpg#xywh=800,0,160,90
+http://localhost:8080/videos/{videoId}/preview_thumbnails#xywh=800,0,160,90
 
 00:00:30.000 --> 00:00:35.000
-199a91e3-144f-4d4b-ad5f-a5069f90f6ca.jpg#xywh=960,0,160,90
+http://localhost:8080/videos/{videoId}/preview_thumbnails#xywh=960,0,160,90
 

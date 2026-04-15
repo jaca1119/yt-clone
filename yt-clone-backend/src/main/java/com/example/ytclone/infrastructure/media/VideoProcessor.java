@@ -107,8 +107,9 @@ public class VideoProcessor {
 
                 //e.g 00:00:00.000 --> 00:00:05.00
                 writer.write("%02d:%02d:%02d.000 --> %02d:%02d:%02d.000\n".formatted(start.toHoursPart(), start.toMinutesPart(), start.toSecondsPart(), end.toHoursPart(), end.toMinutesPart(), end.toSecondsPart()));
+                //in this case filename without extension will be also video id
                 //e.g sprite.jpg#xywh=0,0,160,90
-                writer.write("%s.jpg#xywh=%d,%d,%d,%d\n\n".formatted(filename, x, y, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT));
+                writer.write("http://localhost:8080/videos/%s/preview_thumbnails#xywh=%d,%d,%d,%d\n\n".formatted(filename, x, y, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT));
             }
 
         } catch (IOException e) {

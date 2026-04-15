@@ -10,6 +10,7 @@ public class VideoTestUtils {
     public static final Path THUMBNAIL_PREVIEW = Path.of("src/test/resources/expected_thumbnail_preview.jpg");
     public static final Path PREVIEW_VTT = Path.of("src/test/resources/expected_thumbnail_preview.vtt");
     public static final Path THUMBNAIL_PREVIEW_REST = Path.of("src/test/resources/thumbnail_preview_rest.jpg");
+    public static final Path THUMBNAIL_PREVIEW_VTT_REST = Path.of("src/test/resources/thumbnail_preview_rest.vtt");
     /**
      * Generate file with color bars and time counter
      * @return generated file
