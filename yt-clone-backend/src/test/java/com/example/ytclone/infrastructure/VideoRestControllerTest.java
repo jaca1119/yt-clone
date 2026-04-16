@@ -25,6 +25,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
+import org.springframework.test.web.servlet.client.ExchangeResult;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import tools.jackson.databind.ObjectMapper;
 
@@ -115,6 +116,17 @@ public class VideoRestControllerTest {
                     assertThat(video).isNotNull();
                     assertThat(video.getFilename()).isNotEmpty();
                 });
+    }
+
+    @Test
+    void shouldGetVideoThumbnail() {
+        ExchangeResult exchangeResult = restTestClient.get().uri("/videos/{id}/thumbnail", videoId)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .returnResult();
+
+        assertThat(exchangeResult.getResponseBodyContent()).isNotEmpty();
     }
 
     /**

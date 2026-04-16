@@ -36,7 +36,7 @@ public class VideoProcessor {
     }
 
     public void generateThumbnail(File file, String filename) {
-        ProcessBuilder pb = new ProcessBuilder("ffmpeg", "-ss", "00:00:01.000", "-i", file.getAbsolutePath(), "-vframes", "1", "videos/thumbnails/%s".formatted(filename));
+        ProcessBuilder pb = new ProcessBuilder("ffmpeg", "-i", file.getAbsolutePath(), "-vf", "thumbnail", "-frames:v", "1", "videos/thumbnails/%s".formatted(filename));
         pb.redirectErrorStream(true);
         try {
             //wait for? timeout?
