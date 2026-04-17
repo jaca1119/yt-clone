@@ -204,4 +204,9 @@ public class InMemoryVideoRepository implements VideoRepository {
             return videoEntity;
         });
     }
+
+    @Override
+    public List<VideoEntity> findAllByTitleIgnoreCaseContainingOrderByViewsCountDesc(String searchQuery) {
+        return List.of();
+    }
 }

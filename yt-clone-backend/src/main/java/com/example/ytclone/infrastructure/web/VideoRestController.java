@@ -189,4 +189,10 @@ public class VideoRestController {
         videoService.toggleDislikeForComment(commentId, jwt.getSubject());
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<VideoSearchResponse> searchVideos(@RequestParam("q") String searchQuery) {
+        List<Video> videos = videoService.searchVideos(searchQuery);
+        return ResponseEntity.ok(new VideoSearchResponse(videos));
+    }
 }

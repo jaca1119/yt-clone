@@ -8,7 +8,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update #for dev
-    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -23,6 +22,6 @@ spring:
 
 #logging:
 #  level:
-#    org:
-#      springframework:
-#        security: TRACE
+#    org.hibernate.SQL: DEBUG
+#    org.hibernate.orm.jdbc.bind: TRACE
+#    org.springframework.security: TRACE

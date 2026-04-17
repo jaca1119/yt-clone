@@ -268,6 +268,10 @@ public class VideoService {
         toggleRateForComment(commentEntity, username, CommentRate.DISLIKE);
     }
 
+    public List<Video> searchVideos(String searchQuery) {
+        return videoRepository.findAllByTitleIgnoreCaseContainingOrderByViewsCountDesc(searchQuery).stream().map(this::toVideo).toList();
+    }
+
     private void toggleRateForComment(CommentEntity comment, String username, CommentRate rate) {
         UserCommentInteractionEntity userCommentInteractionEntity = userCommentInteractionRepository.findByUsernameAndCommentId(username, comment.getId()).orElseGet(() -> new UserCommentInteractionEntity(UUID.randomUUID(), username, comment, new UserCommentInteraction(null)));
 

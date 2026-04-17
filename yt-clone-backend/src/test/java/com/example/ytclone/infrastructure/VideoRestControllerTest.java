@@ -938,6 +938,93 @@ public class VideoRestControllerTest {
                 .bodyText().isEqualTo(expectedVTT);
     }
 
+    @Test
+    void shouldSearchVideoByTitle() {
+        //given - prepare titles of videos for test
+        String newTitle = "New video1 title";
+        mockMvcTester.put().uri("/videos/{id}", videoId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new VideoUpdateDTO(Optional.of(newTitle))))
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.NO_CONTENT);
+
+        mockMvcTester.put().uri("/videos/{id}", videoId2)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new VideoUpdateDTO(Optional.of("New video2 title"))))
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.NO_CONTENT);
+
+        //view one video
+        mockMvcTester.post().uri("/videos/{videoId}/views", videoId2)
+                .assertThat()
+                .hasStatus(HttpStatus.NO_CONTENT);
+
+        //then
+        String searchQuery = "video1";
+        mockMvcTester.get().uri("/videos/search?q={searchQuery}", searchQuery)
+                .assertThat()
+                .hasStatusOk()
+                .bodyJson()
+                .convertTo(VideoSearchResponse.class)
+                .satisfies(videoSearchResponse -> {
+                    assertThat(videoSearchResponse.videos()).hasSize(1);
+                    assertThat(videoSearchResponse.videos().getFirst().getId()).isEqualTo(videoId);
+                });
+
+        mockMvcTester.get().uri("/videos/search?q={searchQuery}", "not exist")
+                .assertThat()
+                .hasStatusOk()
+                .bodyJson()
+                .convertTo(VideoSearchResponse.class)
+                .satisfies(videoSearchResponse -> assertThat(videoSearchResponse.videos()).hasSize(0));
+
+        mockMvcTester.get().uri("/videos/search?q={searchQuery}", "video2")
+                .assertThat()
+                .hasStatusOk()
+                .bodyJson()
+                .convertTo(VideoSearchResponse.class)
+                .satisfies(videoSearchResponse -> {
+                    assertThat(videoSearchResponse.videos()).hasSize(1);
+                    assertThat(videoSearchResponse.videos().getFirst().getId()).isEqualTo(videoId2);
+                });
+
+        //should get videos sorted by views
+        mockMvcTester.get().uri("/videos/search?q={searchQuery}", "New video")
+                .assertThat()
+                .hasStatusOk()
+                .bodyJson()
+                .convertTo(VideoSearchResponse.class)
+                .satisfies(videoSearchResponse -> {
+                    assertThat(videoSearchResponse.videos()).hasSize(2);
+                    assertThat(videoSearchResponse.videos().getFirst().getId()).isEqualTo(videoId2);
+                    assertThat(videoSearchResponse.videos().get(1).getId()).isEqualTo(videoId);
+                    assertThat(videoSearchResponse.videos()).isSortedAccordingTo((o1, o2) ->  Math.toIntExact(o2.getViewsCount() - o1.getViewsCount()));
+                });
+
+        //view other video more times
+        mockMvcTester.post().uri("/videos/{videoId}/views", videoId)
+                .assertThat()
+                .hasStatus(HttpStatus.NO_CONTENT);
+        mockMvcTester.post().uri("/videos/{videoId}/views", videoId)
+                .assertThat()
+                .hasStatus(HttpStatus.NO_CONTENT);
+
+        //should get different sorting
+        mockMvcTester.get().uri("/videos/search?q={searchQuery}", "New video")
+                .assertThat()
+                .hasStatusOk()
+                .bodyJson()
+                .convertTo(VideoSearchResponse.class)
+                .satisfies(videoSearchResponse -> {
+                    assertThat(videoSearchResponse.videos()).hasSize(2);
+                    assertThat(videoSearchResponse.videos().getFirst().getId()).isEqualTo(videoId);
+                    assertThat(videoSearchResponse.videos().get(1).getId()).isEqualTo(videoId2);
+                    assertThat(videoSearchResponse.videos()).isSortedAccordingTo((o1, o2) ->  Math.toIntExact(o2.getViewsCount() - o1.getViewsCount()));
+                });
+    }
+
     List<UUID> createComments() {
         return createComments(100);
     }

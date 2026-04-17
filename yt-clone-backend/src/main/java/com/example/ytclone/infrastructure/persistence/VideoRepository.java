@@ -21,4 +21,6 @@ public interface VideoRepository extends JpaRepository<VideoEntity, UUID> {
     @Modifying
     @Query("UPDATE VideoEntity v SET v.viewsCount = v.viewsCount + 1 WHERE v.id = :videoId")
     void saveView(UUID videoId);
+
+    List<VideoEntity> findAllByTitleIgnoreCaseContainingOrderByViewsCountDesc(String searchQuery);
 }
