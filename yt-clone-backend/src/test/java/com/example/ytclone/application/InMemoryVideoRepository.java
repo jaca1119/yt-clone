@@ -183,7 +183,7 @@ public class InMemoryVideoRepository implements VideoRepository {
     }
 
     @Override
-    public List<VideoEntity> findAllByFilenameIsNotNullOrderByUploadDate() {
+    public List<VideoEntity> findAllByFilenameIsNotNullOrderByUploadDateDesc() {
         return List.of();
     }
 

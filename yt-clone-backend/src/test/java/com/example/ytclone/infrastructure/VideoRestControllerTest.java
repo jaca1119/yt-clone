@@ -35,7 +35,10 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -99,7 +102,7 @@ public class VideoRestControllerTest {
                 })
                 .value(videos -> {
                             assertThat(videos).hasSizeGreaterThanOrEqualTo(1);
-                            assertThat(videos).isSortedAccordingTo(Comparator.comparing(Video::getUploadDate));
+                            assertThat(videos).isSortedAccordingTo((o1, o2) -> o2.getUploadDate().compareTo(o1.getUploadDate()));
                         }
                 );
     }
