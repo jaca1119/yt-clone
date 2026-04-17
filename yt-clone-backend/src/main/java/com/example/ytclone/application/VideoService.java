@@ -48,7 +48,7 @@ public class VideoService {
     }
 
     public List<Video> getVideos() {
-        return videoRepository.findAllByFilenameIsNotNull().stream().map(this::toVideo).toList();
+        return videoRepository.findAllByFilenameIsNotNullOrderByUploadDate().stream().map(this::toVideo).toList();
     }
 
     public List<Video> getVideos(String user) {
