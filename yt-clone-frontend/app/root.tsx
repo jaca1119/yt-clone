@@ -22,6 +22,7 @@ import { AuthProvider, useAuth } from "react-oidc-context";
 import type { User, UserManagerSettings } from "oidc-client-ts";
 import { useLocation } from "react-router";
 import { Clapperboard, LogOut, SquarePlay } from "lucide-react";
+import SearchBar from "./components/search-bar";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -86,6 +87,9 @@ function Nav() {
       <Link to="/" className="font-bold text-2xl self-baseline">
         YT-clone
       </Link>
+      <div>
+        <SearchBar />
+      </div>
       <div className="flex gap-1 items-center">
         {auth.isAuthenticated ? (
           <>

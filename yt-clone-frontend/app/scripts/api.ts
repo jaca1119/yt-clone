@@ -12,6 +12,10 @@ export interface Video {
   dislikes: number;
 }
 
+interface SearchVideosResponse {
+  videos: Video[];
+}
+
 export interface UploadVideoResponse {
   videoId: string;
 }
@@ -49,6 +53,13 @@ export interface UserCommentInteraction {
 export async function getAllVideos() {
   const res = await fetch("http://localhost:8080/videos");
   return (await res.json()) as Video[];
+}
+
+export async function searchVideos(query: string) {
+  const params = new URLSearchParams({ q: query });
+  const res = await fetch(`http://localhost:8080/videos/search?${params}`);
+  const data = (await res.json()) as SearchVideosResponse;
+  return data.videos;
 }
 
 export async function updateVideo(videoId: string, title: string) {
