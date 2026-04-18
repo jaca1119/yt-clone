@@ -10,7 +10,6 @@ import {
   Avatar,
   Button,
   Dropdown,
-  DropdownItem,
   Header,
   Label,
 } from "@heroui/react";
@@ -109,12 +108,12 @@ function Nav() {
                   <Dropdown.Section>
                     <Header>Account: {auth.user?.profile.sub}</Header>
                   </Dropdown.Section>
-                  <DropdownItem>
+                  <Dropdown.Item>
                     <SquarePlay />
-                    <Label>
-                      <Link to="/manage">Manage videos</Link>
-                    </Label>
-                  </DropdownItem>
+                    <Link to="/manage">
+                      <Label>Manage videos</Label>
+                    </Link>
+                  </Dropdown.Item>
                   <Dropdown.Item onClick={() => void auth.signoutSilent()}>
                     <LogOut />
                     <Label>Logout</Label>

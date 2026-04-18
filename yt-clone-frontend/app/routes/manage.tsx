@@ -30,7 +30,7 @@ export default function Manage({ loaderData }: Route.ComponentProps) {
           <Table.Content className="min-w-150">
             <Table.Header>
               <Table.Column>Video</Table.Column>
-              <Table.Column>Title</Table.Column>
+              <Table.Column isRowHeader>Title</Table.Column>
               <Table.Column>Upload date</Table.Column>
               <Table.Column>Actions</Table.Column>
             </Table.Header>
