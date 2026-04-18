@@ -42,6 +42,7 @@ public class SecurityConfig {
 //                .httpBasic(Customizer.withDefaults())
 //                .formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/api-docs.yaml").permitAll()
                         .requestMatchers(HttpMethod.GET, "/videos").permitAll()
                         .requestMatchers(HttpMethod.GET, "/videos/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/videos/{id}/comments/*").permitAll()
