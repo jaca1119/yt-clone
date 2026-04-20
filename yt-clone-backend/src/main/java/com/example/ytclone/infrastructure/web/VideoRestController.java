@@ -114,14 +114,14 @@ public class VideoRestController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity updateVideo(@PathVariable UUID id, @RequestBody VideoUpdateDTO updateDTO, @AuthenticationPrincipal Jwt principal) {
+    public ResponseEntity<Void> updateVideo(@PathVariable UUID id, @RequestBody VideoUpdateDTO updateDTO, @AuthenticationPrincipal Jwt principal) {
 
         videoService.updateVideo(id, updateDTO, principal.getSubject());
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity deleteVideo(@PathVariable UUID id, @AuthenticationPrincipal Jwt principal) {
+    public ResponseEntity<Void> deleteVideo(@PathVariable UUID id, @AuthenticationPrincipal Jwt principal) {
         videoService.deleteVideo(id, principal.getSubject());
         return ResponseEntity.noContent().build();
     }
@@ -149,19 +149,19 @@ public class VideoRestController {
     }
 
     @PostMapping("/{videoId}/views")
-    public ResponseEntity trackView(@PathVariable UUID videoId) {
+    public ResponseEntity<Void> trackView(@PathVariable UUID videoId) {
         videoService.trackView(videoId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{videoId}/toggle-like")
-    public ResponseEntity toggleLike(@PathVariable UUID videoId, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Void> toggleLike(@PathVariable UUID videoId, @AuthenticationPrincipal Jwt jwt) {
         videoService.toggleLike(videoId, jwt.getSubject());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{videoId}/toggle-dislike")
-    public ResponseEntity toggleDisLike(@PathVariable UUID videoId, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Void> toggleDisLike(@PathVariable UUID videoId, @AuthenticationPrincipal Jwt jwt) {
         videoService.toggleDislike(videoId, jwt.getSubject());
         return ResponseEntity.ok().build();
     }
@@ -179,13 +179,13 @@ public class VideoRestController {
     }
 
     @PostMapping("/{videoId}/comments/{commentId}/toggle-like")
-    public ResponseEntity toggleLike(@PathVariable UUID videoId, @PathVariable UUID commentId, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Void> toggleLike(@PathVariable UUID videoId, @PathVariable UUID commentId, @AuthenticationPrincipal Jwt jwt) {
         videoService.toggleLikeForComment(commentId, jwt.getSubject());
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{videoId}/comments/{commentId}/toggle-dislike")
-    public ResponseEntity toggleDislike(@PathVariable UUID videoId, @PathVariable UUID commentId, @AuthenticationPrincipal Jwt jwt) {
+    public ResponseEntity<Void> toggleDislike(@PathVariable UUID videoId, @PathVariable UUID commentId, @AuthenticationPrincipal Jwt jwt) {
         videoService.toggleDislikeForComment(commentId, jwt.getSubject());
         return ResponseEntity.ok().build();
     }

@@ -57,7 +57,7 @@ public class VideoRestControllerTest {
     RestTestClient restTestClient;
     @Autowired
     MockMvc mockMvc;
-    @Autowired //TODO move to mockmvcTester
+    @Autowired
     MockMvcTester mockMvcTester;
     @Autowired
     ObjectMapper objectMapper;
@@ -68,7 +68,6 @@ public class VideoRestControllerTest {
 
     @BeforeAll
     static void setUp() throws IOException, InterruptedException {
-        //TODO test if already exist then skip
         if (!Files.exists(Path.of("videos/tests/smpte.mp4"))) {
             Files.createDirectories(Path.of("videos/tests"));
             ProcessBuilder pb = new ProcessBuilder("ffmpeg", "-f", "lavfi", "-i", "smptebars", "-t", "30", "videos/tests/smpte.mp4");
