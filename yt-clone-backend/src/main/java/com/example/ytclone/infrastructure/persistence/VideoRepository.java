@@ -16,6 +16,8 @@ public interface VideoRepository extends JpaRepository<VideoEntity, UUID> {
 
     List<VideoEntity> findAllByCreatedBy(String user);
 
+    boolean existsByCreatedBy(String user);
+
     Optional<VideoEntity> findByFilename(String filename);
 
     @Modifying

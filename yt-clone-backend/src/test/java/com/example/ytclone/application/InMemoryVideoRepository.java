@@ -209,4 +209,9 @@ public class InMemoryVideoRepository implements VideoRepository {
     public List<VideoEntity> findAllByTitleIgnoreCaseContainingOrderByViewsCountDesc(String searchQuery) {
         return List.of();
     }
+
+    @Override
+    public boolean existsByCreatedBy(String user) {
+        return false;
+    }
 }
