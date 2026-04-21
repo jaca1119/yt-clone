@@ -6,11 +6,14 @@ import {
   addComment,
   type Comment,
   getCommentReplies,
+  getSubscriptionCount,
   getUserVideoInteractions,
   getVideoComments,
   getVideoMetadata,
+  getSubscriptionStatus,
   toggleDislike,
   toggleLike,
+  toggleSubscription,
   trackView,
   type Video,
   type Rate,
@@ -76,10 +79,15 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
     replies: Comment[];
   } | null>(null);
   const [rate, setRate] = useState<Rate | null>(null);
+  const [subscribed, setSubscribed] = useState(false);
+  const [subscriptionCount, setSubscriptionCount] = useState<number>(0);
+  const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
   const [commentsInteractions, setCommentsInteractions] = useState<
     UserCommentInteraction[]
   >([]);
   const auth = useAuth();
+  const currentUsername = auth.user?.profile.sub;
+  const isOwnVideo = auth.isAuthenticated && currentUsername === video.creator;
 
   const currentOffset = useRef(10);
 
@@ -91,12 +99,25 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
   }, [initialComments, initialHasNext]);
 
   useEffect(() => {
+    getSubscriptionCount(video.creator).then((count) => {
+      setSubscriptionCount(count);
+    });
+
     if (auth.isAuthenticated) {
       getUserVideoInteractions(params.id).then((res) => {
         setRate(res.rate);
       });
+      if (!isOwnVideo) {
+        getSubscriptionStatus(video.creator).then((res) => {
+          setSubscribed(res.subscribed);
+        });
+      } else {
+        setSubscribed(false);
+      }
+    } else {
+      setSubscribed(false);
     }
-  }, [params.id]);
+  }, [params.id, video.creator, auth.isAuthenticated, isOwnVideo]);
 
   useEffect(() => {
     if (auth.isAuthenticated) {
@@ -143,6 +164,22 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
     setRate(rate === null ? "DISLIKE" : null);
   }
 
+  async function onToggleSubscription() {
+    if (!auth.isAuthenticated || isSubscriptionLoading) {
+      return;
+    }
+
+    setIsSubscriptionLoading(true);
+    try {
+      const res = await toggleSubscription(video.creator);
+      setSubscribed(res.subscribed);
+      const count = await getSubscriptionCount(video.creator);
+      setSubscriptionCount(count);
+    } finally {
+      setIsSubscriptionLoading(false);
+    }
+  }
+
   if (!video) {
     return <div>Video not found</div>;
   }
@@ -176,11 +213,28 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
           </Avatar>
           <div>
             <p className="font-bold">{video.creator}</p>
+            <p className="text-sm text-gray-500">{subscriptionCount} subscribers</p>
             <p>
               <span>{video.viewsCount} views </span> -
               <span> {dayjs(video.uploadDate).fromNow()}</span>
             </p>
           </div>
+          {!isOwnVideo && (
+            <div className="self-center">
+              <Button
+                variant="secondary"
+                className={
+                  subscribed
+                    ? "!bg-black !text-white border border-black"
+                    : "!bg-white !text-black border border-gray-300"
+                }
+                isDisabled={!auth.isAuthenticated || isSubscriptionLoading}
+                onClick={onToggleSubscription}
+              >
+                {subscribed ? "Subscribed" : "Subscribe"}
+              </Button>
+            </div>
+          )}
           <div className="ml-auto self-center">
             <ButtonGroup variant="tertiary" isDisabled={!auth.isAuthenticated}>
               <Button onClick={() => like(video.id)}>

@@ -50,6 +50,10 @@ export interface UserCommentInteraction {
   rate: Rate | null;
 }
 
+interface SubscriptionStatus {
+  subscribed: boolean;
+}
+
 export async function getAllVideos() {
   const res = await fetch("http://localhost:8080/videos");
   return (await res.json()) as Video[];
@@ -257,6 +261,41 @@ export async function getUserCommentInteractions(
         Authorization: "Bearer " + getAccessToken(),
       },
     },
+  );
+
+  return res.data;
+}
+
+export async function getSubscriptionStatus(creatorUsername: string) {
+  const res = await axios.get<SubscriptionStatus>(
+    `http://localhost:8080/subscriptions/${creatorUsername}/status`,
+    {
+      headers: {
+        Authorization: "Bearer " + getAccessToken(),
+      },
+    },
+  );
+
+  return res.data;
+}
+
+export async function toggleSubscription(creatorUsername: string) {
+  const res = await axios.post<SubscriptionStatus>(
+    `http://localhost:8080/subscriptions/${creatorUsername}/toggle`,
+    null,
+    {
+      headers: {
+        Authorization: "Bearer " + getAccessToken(),
+      },
+    },
+  );
+
+  return res.data;
+}
+
+export async function getSubscriptionCount(creatorUsername: string) {
+  const res = await axios.get<number>(
+    `http://localhost:8080/subscriptions/${creatorUsername}/count`,
   );
 
   return res.data;
