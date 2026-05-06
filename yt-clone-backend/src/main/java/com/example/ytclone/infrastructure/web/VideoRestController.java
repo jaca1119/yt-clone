@@ -46,6 +46,11 @@ public class VideoRestController {
         return videoService.getVideos();
     }
 
+    @GetMapping("/feed")
+    public List<Video> getTailoredFeed(@RequestParam Optional<Integer> limit) {
+        return videoService.getPopularFreshVideos(limit);
+    }
+
     @GetMapping("/by-user")
     public List<Video> getVideosByUser(@AuthenticationPrincipal Jwt jwt) {
         log.info("Finding videos by user {}", jwt.getSubject());

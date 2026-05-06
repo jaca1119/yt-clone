@@ -107,6 +107,57 @@ public class VideoRestControllerTest {
     }
 
     @Test
+    void shouldGetTailoredFeedSortedByPopularityAndRespectLimit() {
+        // given baseline: both videos exist from setUpTest()
+        // make videoId clearly stronger by engagement signals used in scoring
+        for (int i = 0; i < 8; i++) {
+            int finalI = i;
+            mockMvcTester.post().uri("/videos/{videoId}/toggle-like", videoId)
+                    .with(jwt().jwt(jwt -> jwt.subject("feed-like-user-" + finalI)))
+                    .assertThat()
+                    .hasStatus(HttpStatus.OK);
+        }
+
+        for (int i = 0; i < 30; i++) {
+            mockMvcTester.post().uri("/videos/{videoId}/views", videoId)
+                    .assertThat()
+                    .hasStatus(HttpStatus.NO_CONTENT);
+        }
+
+        mockMvcTester.post().uri("/videos/{videoId}/toggle-dislike", videoId2)
+                .with(jwt())
+                .assertThat()
+                .hasStatus(HttpStatus.OK);
+
+        // when
+        List<Video> feed = restTestClient.get().uri("/videos/feed")
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(new ParameterizedTypeReference<List<Video>>() {
+                })
+                .returnResult()
+                .getResponseBody();
+
+        // then
+        assertThat(feed).isNotNull();
+        assertThat(feed).hasSizeGreaterThanOrEqualTo(2);
+        assertThat(feed.getFirst().getId()).isEqualTo(videoId);
+
+        // and limit should cap number of results
+        restTestClient.get().uri("/videos/feed?limit={limit}", 1)
+                .exchange()
+                .expectStatus()
+                .isOk()
+                .expectBody(new ParameterizedTypeReference<List<Video>>() {
+                })
+                .value(videos -> {
+                    assertThat(videos).hasSize(1);
+                    assertThat(videos.getFirst().getId()).isEqualTo(videoId);
+                });
+    }
+
+    @Test
     void shouldGetVideoMetadata() {
         restTestClient.get().uri("/videos/{id}/metadata", videoId)
                 .exchange()

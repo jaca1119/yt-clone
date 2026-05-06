@@ -59,6 +59,11 @@ export async function getAllVideos() {
   return (await res.json()) as Video[];
 }
 
+export async function getVideosFeed() {
+  const res = await fetch("http://localhost:8080/videos/feed");
+  return (await res.json()) as Video[];
+}
+
 export async function searchVideos(query: string) {
   const params = new URLSearchParams({ q: query });
   const res = await fetch(`http://localhost:8080/videos/search?${params}`);

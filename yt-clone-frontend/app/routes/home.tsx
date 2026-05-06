@@ -1,6 +1,6 @@
 import type { Route } from "./+types/home";
 import { VideosList } from "../videos-list/videos-list";
-import { getAllVideos } from "~/scripts/api";
+import { getVideosFeed } from "~/scripts/api";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -10,7 +10,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export async function clientLoader() {
-  return await getAllVideos();
+  return await getVideosFeed();
 }
 
 export function HydrateFallback() {

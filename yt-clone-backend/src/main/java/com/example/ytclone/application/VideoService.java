@@ -26,6 +26,9 @@ It shouldn't return objects from the infrastructure. It should throw domain exce
 @Slf4j
 @Service
 public class VideoService {
+    private static final int DEFAULT_FEED_LIMIT = 24;
+    private static final int MAX_FEED_LIMIT = 100;
+    private static final double FRESHNESS_WINDOW_DAYS = 14.0;
     private final Path videosDirectory = Path.of("videos").toAbsolutePath();
     private final Path thumbnailsDirectory = Path.of("videos/thumbnails").toAbsolutePath();
     private final Path previewDirectory = Path.of("videos/preview_thumbnails").toAbsolutePath();
@@ -50,6 +53,32 @@ public class VideoService {
 
     public List<Video> getVideos() {
         return videoRepository.findAllByFilenameIsNotNullOrderByUploadDateDesc().stream().map(this::toVideo).toList();
+    }
+
+    public List<Video> getPopularFreshVideos(Optional<Integer> requestedLimit) {
+        int limit = Math.max(1, Math.min(requestedLimit.orElse(DEFAULT_FEED_LIMIT), MAX_FEED_LIMIT));
+        LocalDateTime now = LocalDateTime.now();
+
+        return videoRepository.findAllByFilenameIsNotNull().stream()
+                .sorted((a, b) -> {
+                    int scoreCompare = Double.compare(scoreVideoForFeed(b, now), scoreVideoForFeed(a, now));
+                    if (scoreCompare != 0) {
+                        return scoreCompare;
+                    }
+                    if (a.getUploadDate() == null && b.getUploadDate() == null) {
+                        return 0;
+                    }
+                    if (a.getUploadDate() == null) {
+                        return 1;
+                    }
+                    if (b.getUploadDate() == null) {
+                        return -1;
+                    }
+                    return b.getUploadDate().compareTo(a.getUploadDate());
+                })
+                .limit(limit) //TODO should limit in db instead here
+                .map(this::toVideo)
+                .toList();
     }
 
     public List<Video> getVideos(String user) {
@@ -371,5 +400,16 @@ public class VideoService {
 
     private Video toVideo(VideoEntity videoEntity) {
         return new Video(videoEntity.getId(), videoEntity.getFilename(), videoEntity.getTitle(), videoEntity.getCreatedBy(), videoEntity.getLength(), videoEntity.getUploadDate(), videoEntity.getViewsCount(), videoEntity.getLikes(), videoEntity.getDislikes());
+    }
+
+    private double scoreVideoForFeed(VideoEntity video, LocalDateTime now) {
+        double recencyBoost = 0;
+        if (video.getUploadDate() != null && !video.getUploadDate().isAfter(now)) {
+            long ageInDays = Duration.between(video.getUploadDate(), now).toDays();
+            recencyBoost = Math.max(0, FRESHNESS_WINDOW_DAYS - ageInDays);
+        }
+
+        double popularityScore = Math.log1p(video.getViewsCount()) + (2.0 * video.getLikes()) - video.getDislikes();
+        return recencyBoost + popularityScore;
     }
 }

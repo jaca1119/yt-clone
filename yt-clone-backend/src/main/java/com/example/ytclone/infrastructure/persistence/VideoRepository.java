@@ -13,6 +13,7 @@ public interface VideoRepository extends JpaRepository<VideoEntity, UUID> {
     Optional<VideoEntity> findByIdAndCreatedBy(UUID id, String user);
 
     List<VideoEntity> findAllByFilenameIsNotNullOrderByUploadDateDesc();
+    List<VideoEntity> findAllByFilenameIsNotNull();
 
     List<VideoEntity> findAllByCreatedBy(String user);
 

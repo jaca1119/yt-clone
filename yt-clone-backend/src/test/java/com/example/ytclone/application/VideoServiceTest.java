@@ -10,6 +10,7 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -66,5 +67,50 @@ public class VideoServiceTest {
         assertThat(video.get().getTitle()).isEqualTo("updated while uploading");
         assertThat(video.get().getFilename()).isEqualTo(file.getName());
         assertThat(video.get().getLength()).isEqualTo(321L);
+    }
+
+    @Test
+    void shouldRankPopularOlderVideoAboveFreshUnpopularVideo() {
+        // given
+        when(videoProcessor.getDuration(any())).thenReturn(Duration.ofSeconds(120));
+        LocalDateTime now = LocalDateTime.now();
+        UUID olderVideoId = videoService.startVideoUpload("older-popular", "test", now.minusDays(10));
+        UUID freshVideoId = videoService.startVideoUpload("fresh-unpopular", "test", now.minusHours(2));
+        videoService.saveVideoFile(olderVideoId, new File("older.mp4"), "test");
+        videoService.saveVideoFile(freshVideoId, new File("fresh.mp4"), "test");
+
+        videoRepository.findById(olderVideoId).ifPresent(video -> {
+            video.setViewsCount(50_000);
+            video.setLikes(120);
+            video.setDislikes(3);
+        });
+        videoRepository.findById(freshVideoId).ifPresent(video -> {
+            video.setViewsCount(5);
+            video.setLikes(0);
+            video.setDislikes(0);
+        });
+
+        // when
+        List<Video> feed = videoService.getPopularFreshVideos(Optional.of(10));
+
+        // then
+        assertThat(feed).extracting(Video::getId).contains(olderVideoId, freshVideoId);
+        assertThat(feed.getFirst().getId()).isEqualTo(olderVideoId);
+    }
+
+    @Test
+    void shouldClampFeedLimitToAtLeastOne() {
+        // given
+        when(videoProcessor.getDuration(any())).thenReturn(Duration.ofSeconds(120));
+        UUID firstId = videoService.startVideoUpload("first", "test", LocalDateTime.now().minusDays(1));
+        UUID secondId = videoService.startVideoUpload("second", "test", LocalDateTime.now().minusHours(1));
+        videoService.saveVideoFile(firstId, new File("first.mp4"), "test");
+        videoService.saveVideoFile(secondId, new File("second.mp4"), "test");
+
+        // when
+        List<Video> feed = videoService.getPopularFreshVideos(Optional.of(0));
+
+        // then
+        assertThat(feed).hasSize(1);
     }
 }
