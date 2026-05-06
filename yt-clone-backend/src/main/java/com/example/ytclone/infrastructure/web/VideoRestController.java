@@ -127,6 +127,7 @@ public class VideoRestController {
             throw new RuntimeException(e);
         }
         videoService.saveVideoFile(id, file, principal.getSubject());
+        log.info("video {} saved successfully", id);
 
         return ResponseEntity.ok().body(id);
     }

@@ -69,6 +69,7 @@ public class VideoProcessor {
         pb.redirectErrorStream(true);
         try {
             Process process = pb.start();
+            log.info("HLS assets generation process started for file {}", file.getAbsolutePath());
             int exitCode = process.waitFor();
             if (exitCode != 0) {
                 String processOutput;
@@ -77,8 +78,9 @@ public class VideoProcessor {
                 }
                 throw new RuntimeException("HLS generation failed with output: " + processOutput);
             }
+            log.info("HLS assets for file {} generated successfully", file.getAbsolutePath());
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Failed to generate HLS assets", e);
+            throw new RuntimeException("Failed to generate HLS assets for file " + file.getAbsolutePath(), e);
         }
     }
 
