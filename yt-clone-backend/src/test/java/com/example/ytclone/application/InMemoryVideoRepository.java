@@ -206,6 +206,17 @@ public class InMemoryVideoRepository implements VideoRepository {
     }
 
     @Override
+    public int updateUploadedFileMetadata(UUID id, String creator, String filename, Long length) {
+        VideoEntity video = videos.get(id);
+        if (video == null || !video.getCreatedBy().equals(creator)) {
+            return 0;
+        }
+        video.setFilename(filename);
+        video.setLength(length);
+        return 1;
+    }
+
+    @Override
     public List<VideoEntity> findAllByTitleIgnoreCaseContainingOrderByViewsCountDesc(String searchQuery) {
         return List.of();
     }

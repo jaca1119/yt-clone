@@ -42,4 +42,29 @@ public class VideoServiceTest {
         assertThat(video).isPresent();
         assertThat(video.get()).isEqualTo(new Video(id, file.getName(), initialTitle, "test", 123L, uploadDatetime, 0, 0, 0));
     }
+
+    @Test
+    void shouldPreserveUpdatedTitleWhenSavingUploadedFileMetadata() {
+        // given
+        File file = new File("test.mp4");
+        LocalDateTime uploadDatetime = LocalDateTime.now();
+        UUID id = videoService.startVideoUpload("initial title", "test", uploadDatetime);
+        when(videoProcessor.getDuration(any())).thenReturn(Duration.ofSeconds(321));
+
+        // simulate concurrent title update that happened while file upload was still in progress
+        videoRepository.findById(id).ifPresent(video -> {
+            video.setTitle("updated while uploading");
+            videoRepository.save(video);
+        });
+
+        // when
+        videoService.saveVideoFile(id, file, "test");
+
+        // then
+        Optional<Video> video = videoService.getVideo(id);
+        assertThat(video).isPresent();
+        assertThat(video.get().getTitle()).isEqualTo("updated while uploading");
+        assertThat(video.get().getFilename()).isEqualTo(file.getName());
+        assertThat(video.get().getLength()).isEqualTo(321L);
+    }
 }

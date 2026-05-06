@@ -122,24 +122,22 @@ public class VideoService {
         return id;
     }
 
+    @Transactional
     public void saveVideoFile(UUID id, File file, String creator) {
-        videoRepository.findByIdAndCreatedBy(id, creator)
-                .ifPresentOrElse(videoEntity -> {
-                    try {
-                        Duration duration = videoProcessor.getDuration(file);
-                        videoProcessor.generateThumbnail(file, "%s.jpg".formatted(id));
-                        videoProcessor.generateHlsAssets(file, "videos/hls/%s".formatted(id));
-                        videoEntity.setFilename(file.getName());
-                        videoEntity.setLength(duration.getSeconds());
-                        videoRepository.save(videoEntity);
-                    } catch (RuntimeException e) {
-                        file.delete();
-                        throw e;
-                    }
-                }, () -> {
-                    file.delete();
-                    throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-                });
+        try {
+            Duration duration = videoProcessor.getDuration(file);
+            videoProcessor.generateThumbnail(file, "%s.jpg".formatted(id));
+            videoProcessor.generateHlsAssets(file, "videos/hls/%s".formatted(id));
+
+            int updatedRows = videoRepository.updateUploadedFileMetadata(id, creator, file.getName(), duration.getSeconds());
+            if (updatedRows == 0) {
+                file.delete();
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+        } catch (RuntimeException e) {
+            file.delete();
+            throw e;
+        }
 
         videoProcessor.generatePreviewThumbnailsSprite(file);
     }
