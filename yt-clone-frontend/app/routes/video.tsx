@@ -29,6 +29,7 @@ import { useAuth } from "react-oidc-context";
 import { ChevronDown, ChevronUp, ThumbsDown, ThumbsUp } from "lucide-react";
 import { createPlayer, videoFeatures } from "@videojs/react";
 import { Video as VideoPlayer, VideoSkin } from "@videojs/react/video";
+import { HlsVideo } from "@videojs/react/media/hls-video";
 dayjs.extend(LocalizedFormat);
 dayjs.extend(RelativeTime);
 
@@ -189,18 +190,14 @@ export default function Video({ loaderData, params }: Route.ComponentProps) {
       <div className="w-full h-180">
         <Player.Provider>
           <VideoSkin>
-            <VideoPlayer
-              src={`http://localhost:8080/videos/${video.id}`}
-              poster={`http://localhost:8080/videos/${video.id}/thumbnail`}
-              playsInline
-            >
+            <HlsVideo src={`http://localhost:8080/videos/${video.id}/hls/index.m3u8`} poster={`http://localhost:8080/videos/${video.id}/thumbnail`} playsInline>
               <track
                 kind="metadata"
                 label="thumbnails"
                 src={`/videos/${video.id}/preview_thumbnails_vtt`}
                 default
               />
-            </VideoPlayer>
+            </HlsVideo>
           </VideoSkin>
         </Player.Provider>
       </div>
