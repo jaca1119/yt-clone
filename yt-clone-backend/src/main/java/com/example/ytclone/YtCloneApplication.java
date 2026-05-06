@@ -49,6 +49,7 @@ public class YtCloneApplication implements ApplicationRunner {
         Files.createDirectories(videosDir);
         Files.createDirectories(Path.of("videos/thumbnails"));
         Files.createDirectories(Path.of("videos/preview_thumbnails"));
+        Files.createDirectories(Path.of("videos/hls"));
 
         log.info("Args: {}", Arrays.toString(args.getSourceArgs()));
 

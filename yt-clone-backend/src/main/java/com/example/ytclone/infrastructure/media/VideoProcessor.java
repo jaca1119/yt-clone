@@ -19,6 +19,7 @@ public class VideoProcessor {
     private static final int SPRITE_COLUMNS = 10;
     private static final int THUMBNAIL_WIDTH = 160;
     private static final int THUMBNAIL_HEIGHT = 90;
+    private static final int HLS_SEGMENT_DURATION_SECONDS = 6;
 
     public Duration getDuration(File file) {
         ProcessBuilder processBuilder = new ProcessBuilder("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", file.getAbsolutePath());
@@ -43,6 +44,41 @@ public class VideoProcessor {
             pb.start();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void generateHlsAssets(File file, String outputDirectory) {
+        Path outputDir = Path.of(outputDirectory);
+        try {
+            Files.createDirectories(outputDir);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create HLS output directory", e);
+        }
+
+        ProcessBuilder pb = new ProcessBuilder(
+                "ffmpeg",
+                "-i", file.getAbsolutePath(),
+                "-codec:v", "libx264",
+                "-codec:a", "aac",
+                "-hls_time", String.valueOf(HLS_SEGMENT_DURATION_SECONDS),
+                "-hls_playlist_type", "vod",
+                "-hls_segment_filename", outputDir.resolve("segment_%03d.ts").toString(),
+                "-f", "hls",
+                outputDir.resolve("index.m3u8").toString()
+        );
+        pb.redirectErrorStream(true);
+        try {
+            Process process = pb.start();
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                String processOutput;
+                try (BufferedReader reader = process.inputReader()) {
+                    processOutput = String.join("\n", reader.lines().toList());
+                }
+                throw new RuntimeException("HLS generation failed with output: " + processOutput);
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Failed to generate HLS assets", e);
         }
     }
 

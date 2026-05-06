@@ -52,14 +52,32 @@ public class VideoRestController {
         return videoService.getVideos(jwt.getSubject());
     }
 
-    //Spring handles range automatically
-    //TODO Browser (e.g. firefox) sends range for full data and stops consuming if has enough data. Test if spring load full file, or send it in chunks
     @GetMapping("/{id}")
     public ResponseEntity<Resource> streamVideo(@PathVariable UUID id) {
-        Optional<Resource> fileSystemResource = videoService.getVideoFilePath(id).map(FileSystemResource::new);
+        Optional<Resource> fileSystemResource = videoService.getVideoHlsPlaylistPath(id).map(FileSystemResource::new);
 
         return fileSystemResource.map(resource -> ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType("video/mp4"))
+                .contentType(MediaType.parseMediaType("application/vnd.apple.mpegurl"))
+                .body(resource))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/hls/index.m3u8")
+    public ResponseEntity<Resource> getVideoHlsPlaylist(@PathVariable UUID id) {
+        Optional<Resource> fileSystemResource = videoService.getVideoHlsPlaylistPath(id).map(FileSystemResource::new);
+        return fileSystemResource.map(resource -> ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/vnd.apple.mpegurl"))
+                .body(resource))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/hls/{segmentFilename:.+}")
+    public ResponseEntity<Resource> getVideoHlsSegment(@PathVariable UUID id, @PathVariable String segmentFilename) {
+        Optional<Resource> fileSystemResource = videoService.getVideoHlsAssetPath(id, segmentFilename).map(FileSystemResource::new);
+        return fileSystemResource.map(resource -> ResponseEntity.ok()
+                .contentType(segmentFilename.endsWith(".ts")
+                        ? MediaType.parseMediaType("video/mp2t")
+                        : MediaType.APPLICATION_OCTET_STREAM)
                 .body(resource))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

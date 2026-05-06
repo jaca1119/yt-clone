@@ -130,27 +130,28 @@ public class VideoRestControllerTest {
         assertThat(exchangeResult.getResponseBodyContent()).isNotEmpty();
     }
 
-    /**
-     * in the browser it will send Range: bytes=0- header which means full file but it will stop reading at some point
-     * so server will not send more data. But in test it's easier to just send Range with bytes set like Range: bytes=0-999
-     */
     @Test
-    void shouldStreamVideoWithRange() {
+    void shouldStreamVideoWithHlsPlaylistAndSegments() {
         restTestClient.get().uri("/videos/{id}", videoId)
-                .header("Range", "bytes=0-999") //get 1000 bytes, browser send 'bytes=0-' which sends full file but browser stop reading so server stop sending more
                 .exchange()
                 .expectStatus()
-                .isEqualTo(HttpStatus.PARTIAL_CONTENT)
+                .isOk()
                 .expectHeader()
-                .valueEquals("Accept-Ranges", "bytes")
+                .contentType(MediaType.parseMediaType("application/vnd.apple.mpegurl"))
+                .expectBody(String.class)
+                .value(playlist -> {
+                    assertThat(playlist).contains("#EXTM3U");
+                    assertThat(playlist).contains("segment_000.ts");
+                });
+
+        restTestClient.get().uri("/videos/{id}/hls/segment_000.ts", videoId)
+                .exchange()
+                .expectStatus()
+                .isOk()
                 .expectHeader()
-                .contentType(MediaType.valueOf("video/mp4"))
-                .expectHeader()
-                .exists("Content-Length")
-                .expectHeader()
-                .exists("Content-Range")
+                .contentType(MediaType.parseMediaType("video/mp2t"))
                 .expectBody()
-                .consumeWith(response -> assertThat(response.getResponseBody()).hasSize(1000));
+                .consumeWith(response -> assertThat(response.getResponseBody()).isNotEmpty());
     }
 
     @Test

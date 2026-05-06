@@ -29,6 +29,7 @@ public class VideoService {
     private final Path videosDirectory = Path.of("videos").toAbsolutePath();
     private final Path thumbnailsDirectory = Path.of("videos/thumbnails").toAbsolutePath();
     private final Path previewDirectory = Path.of("videos/preview_thumbnails").toAbsolutePath();
+    private final Path hlsDirectory = Path.of("videos/hls").toAbsolutePath();
     private final VideoRepository videoRepository;
     private final CommentRepository commentRepository;
     private final VideoProcessor videoProcessor;
@@ -55,15 +56,26 @@ public class VideoService {
         return videoRepository.findAllByCreatedBy(user).stream().map(this::toVideo).toList();
     }
 
-    public Optional<Path> getVideoFilePath(UUID id) {
+    public Optional<Path> getVideoHlsPlaylistPath(UUID id) {
         return videoRepository.findById(id)
                 .map(video -> {
-                    Path resource = Path.of("videos/%s".formatted(video.getFilename())).toAbsolutePath();
+                    Path resource = Path.of("videos/hls/%s/index.m3u8".formatted(video.getId())).toAbsolutePath();
                     if (Files.exists(resource)) {
                         return resource;
                     } else {
                         return null;
                     }
+                });
+    }
+
+    public Optional<Path> getVideoHlsAssetPath(UUID id, String filename) {
+        return videoRepository.findById(id)
+                .map(video -> {
+                    Path resource = hlsDirectory.resolve(id.toString()).resolve(filename).normalize();
+                    if (!resource.startsWith(hlsDirectory.resolve(id.toString())) || !Files.exists(resource)) {
+                        return null;
+                    }
+                    return resource;
                 });
     }
 
@@ -116,6 +128,7 @@ public class VideoService {
                     try {
                         Duration duration = videoProcessor.getDuration(file);
                         videoProcessor.generateThumbnail(file, "%s.jpg".formatted(id));
+                        videoProcessor.generateHlsAssets(file, "videos/hls/%s".formatted(id));
                         videoEntity.setFilename(file.getName());
                         videoEntity.setLength(duration.getSeconds());
                         videoRepository.save(videoEntity);
@@ -160,11 +173,12 @@ public class VideoService {
                             Path thumbnail = thumbnailsDirectory.resolve(filenameWithoutExtension + ".jpg").normalize();
                             Path preview = previewDirectory.resolve(filenameWithoutExtension + ".jpg").normalize();
                             Path previewVTT = previewDirectory.resolve(filenameWithoutExtension + ".vtt").normalize();
+                            Path hls = hlsDirectory.resolve(entity.getId().toString()).normalize();
 
-                            if (videoFile.toString().contains("..") || thumbnail.toString().contains("..") || preview.toString().contains("..") || previewVTT.toString().contains("..")) {
+                            if (videoFile.toString().contains("..") || thumbnail.toString().contains("..") || preview.toString().contains("..") || previewVTT.toString().contains("..") || hls.toString().contains("..")) {
                                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
                             }
-                            if (!videoFile.toString().contains("/videos/") || !thumbnail.toString().contains("/videos/thumbnails/") || !preview.toString().contains("/videos/preview_thumbnails/") || !previewVTT.toString().contains("/videos/preview_thumbnails/")) {
+                            if (!videoFile.toString().contains("/videos/") || !thumbnail.toString().contains("/videos/thumbnails/") || !preview.toString().contains("/videos/preview_thumbnails/") || !previewVTT.toString().contains("/videos/preview_thumbnails/") || !hls.toString().contains("/videos/hls/")) {
                                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
                             }
 
@@ -200,6 +214,23 @@ public class VideoService {
                                 try {
                                     Files.deleteIfExists(previewVTT);
                                     log.info("Deleted previewVTT {}", id);
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+
+                            if (Files.isDirectory(hls)) {
+                                try {
+                                    Files.walk(hls)
+                                            .sorted((a, b) -> b.getNameCount() - a.getNameCount())
+                                            .forEach(path -> {
+                                                try {
+                                                    Files.deleteIfExists(path);
+                                                } catch (IOException e) {
+                                                    throw new RuntimeException(e);
+                                                }
+                                            });
+                                    log.info("Deleted hls assets {}", id);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }
