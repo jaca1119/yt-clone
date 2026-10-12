@@ -25,6 +25,11 @@ Use cases:
 - [ ] As an unauthenticated user I want to open homepage, see videos thumbnails, length title, author
 - [ ] As an unauthenticated user I want to click on the video on watch it
 
+
+### TODO:
+- [ ] add docker-compose
+- [ ] graphql
+
 ## Requirements
 
 - ffprobe on the system to scan initial videos

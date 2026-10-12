@@ -6,6 +6,7 @@ import com.example.ytclone.infrastructure.persistence.*;
 import com.example.ytclone.infrastructure.web.dto.VideoUpdateDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /*
 It shouldn't return objects from the infrastructure. It should throw domain exceptions that are mapped by web layer instead of ResponseStatusException
@@ -56,7 +58,7 @@ public class VideoService {
     }
 
     public List<Video> getPopularFreshVideos(Optional<Integer> requestedLimit) {
-        int limit = Math.max(1, Math.min(requestedLimit.orElse(DEFAULT_FEED_LIMIT), MAX_FEED_LIMIT));
+        int limit = Math.clamp(requestedLimit.orElse(DEFAULT_FEED_LIMIT), 1, MAX_FEED_LIMIT);
         LocalDateTime now = LocalDateTime.now();
 
         return videoRepository.findAllByFilenameIsNotNull().stream()
@@ -151,6 +153,7 @@ public class VideoService {
         return id;
     }
 
+    @Async
     @Transactional
     public void saveVideoFile(UUID id, File file, String creator) {
         try {
@@ -247,9 +250,8 @@ public class VideoService {
                             }
 
                             if (Files.isDirectory(hls)) {
-                                try {
-                                    Files.walk(hls)
-                                            .sorted((a, b) -> b.getNameCount() - a.getNameCount())
+                                try (Stream<Path> hlsDir = Files.walk(hls)) {
+                                    hlsDir.sorted((a, b) -> b.getNameCount() - a.getNameCount())
                                             .forEach(path -> {
                                                 try {
                                                     Files.deleteIfExists(path);
