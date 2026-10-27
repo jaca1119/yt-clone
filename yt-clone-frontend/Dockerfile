@@ -12,13 +12,10 @@ RUN pnpm install --prod --frozen-lockfile
 FROM base AS build-env
 COPY --from=development-dependencies-env /app/node_modules ./node_modules
 COPY . .
-RUN pnpm run build
+RUN pnpm build
 
-FROM base AS production
-ENV NODE_ENV=production
+FROM nginx:alpine
+COPY --from=build-env /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-COPY --from=production-dependencies-env /app/node_modules ./node_modules
-COPY --from=build-env /app/build ./build
-
-EXPOSE 3000
-CMD ["pnpm", "start"]
+EXPOSE 80
